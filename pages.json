@@ -1,0 +1,76 @@
+{
+	"pages": [
+		{
+			"path": "pages/game/index",
+			"style": {
+				"navigationBarTitleText": "游戏"
+			}
+		},
+		{
+			"path": "pages/search/index",
+			"style": {
+				"navigationBarTitleText": "详情"
+			}
+		},
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "音乐地图"
+			}
+		},
+		
+		{
+			"path": "pages/board/index",
+			"style": {
+				"navigationBarTitleText": "排行榜"
+			}
+		},
+		
+		{
+			"path": "pages/contribute/index",
+			"style": {
+				"navigationBarTitleText": "贡献"
+			}
+		}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "uni-app",
+		"navigationBarBackgroundColor": "#F8F8F8",
+		"backgroundColor": "#F8F8F8"
+	},
+	"uniIdRouter": {},
+	"tabBar": {
+		"color": "#7A7E83",
+		"selectedColor": "#3cc51f",
+		"borderStyle": "black",
+		"backgroundColor": "#ffffff",
+		"list": [{
+			"pagePath": "pages/index/index",
+			"iconPath": "static/tabs/home.png",
+			"selectedIconPath": "static/tabs/home-active.png",
+			"text": "首页"
+		}, {
+			"pagePath": "pages/game/index",
+			"iconPath": "static/tabs/game.png",
+			"selectedIconPath": "static/tabs/game-active.png",
+			"text": "发现"
+		}, {
+			"pagePath": "pages/board/index",
+			"iconPath": "static/tabs/board.png",
+			"selectedIconPath": "static/tabs/board-active.png",
+			"text": "消息"
+		}, {
+			"pagePath": "pages/contribute/index",
+			"iconPath": "static/tabs/contribute.png",
+			"selectedIconPath": "static/tabs/contribute-active.png",
+			"text": "贡献"
+		}]
+	},
+	"easycom": {
+		"autoscan": true,
+		"custom": {
+			"^u-(.*)": "uview-plus/components/u-$1/u-$1.vue"
+		}
+	}
+}

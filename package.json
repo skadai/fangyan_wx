@@ -1,0 +1,12 @@
+{
+  "scripts": {
+    "postinstall": "weapp-tw patch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.16",
+    "weapp-tailwindcss": "^3.7.0"
+  },
+  "dependencies": {
+    "uview-plus": "^3.3.54"
+  }
+}
