@@ -1,6 +1,6 @@
 const BASE_URL = process.env.NODE_ENV === 'development' 
   ? 'https://ai-demo.tool.recurvedata.com/api/dialect' 
-  : 'https://your-api-domain.com'  // 这里替换为你的生产环境域名
+  : 'https://ai-demo.tool.recurvedata.com/api/dialect'  // 这里替换为你的生产环境域名
 
 export const request = (options) => {
   return new Promise((resolve, reject) => {
