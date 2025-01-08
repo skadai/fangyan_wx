@@ -17,11 +17,15 @@
 		<view class="player-section">
 			<!-- 音频播放器卡片 -->
 			<view class="card player-card">
+				
 				<audio 
 					:src="currentSong.src" 
 					:action="audioAction"
 					@play="onPlay"
 					@pause="onPause"
+					@canplay="onCanPlay"
+					@error="onAudioError"
+					@waiting="onAudioWaiting"
 					controls
 				></audio>
 			</view>
@@ -60,6 +64,21 @@
 				>查看文本</button>
 			</view>
 		</view>
+		
+		<!-- 结果遮罩层 -->
+		<view v-if="showResult" class="result-mask">
+			<view class="result-content">
+				<view class="result-location">
+					方言所在：{{ result.correct }} - 你的猜测：{{ selected.city }}
+				</view>
+				<view class="result-distance">
+					偏差 {{ result.distance }}公里
+				</view>
+				<view class="result-comment">
+					{{ result.comment }}
+				</view>
+			</view>
+		</view>
 	</view>
 </template>
 
@@ -93,7 +112,14 @@
 				showAnswer: false,
 				submitLoading: false,
 				changeLoading: false,
-				showAnswerLoading: false
+				showAnswerLoading: false,
+				showResult: false,
+				result: {
+					correct: '',
+					distance: 0,
+					comment: ''
+				},
+				audioLoading: true,
 			}
 		},
 		onLoad() {
@@ -126,12 +152,12 @@
 					})
 					console.log('submit question', res)
 					if (res) {
-						uni.showToast({
-							title: '提交成功',
-							icon: 'success'
-						})
-						// 提交成功后可以自动获取下一题
-						this.fetchQuestions()
+						this.result = {
+							correct: res.correct,
+							distance: res.distance,
+							comment: res.comment
+						}
+						this.showResult = true
 					}
 				} catch (error) {
 					console.error('提交答案失败：', error)
@@ -186,6 +212,7 @@
 			
 			// 获取方言问题列表
 			async fetchQuestions() {
+				this.audioLoading = true // 重置加载状态
 				try {
 					const res = await request({
 						url: '/questions',
@@ -197,6 +224,12 @@
 						this.currentSong.src = `${import.meta.env.VITE_MEDIA_URL}/${res.source_id}`
 						this.showAnswer = false
 						this.audioAction.method = 'pause'
+						this.showResult = false
+						this.selected = {
+							city: null,
+							latitude: null,
+							longitude: null
+						}
 					} else {
 						uni.showToast({
 							title: '获取问题失败',
@@ -222,7 +255,23 @@
 				} finally {
 					this.showAnswerLoading = false
 				}
-			}
+			},
+			
+			onCanPlay() {
+				this.audioLoading = false
+			},
+			
+			onAudioError(e) {
+				this.audioLoading = false
+				uni.showToast({
+					title: '音频加载失败',
+					icon: 'none'
+				})
+			},
+			
+			onAudioWaiting() {
+				this.audioLoading = true
+			},
 		},
 	}
 </script>
@@ -266,6 +315,7 @@
 
 	.player-card {
 		margin-bottom: 20rpx;
+		position: relative;
 	}
 
 	.info-card {
@@ -356,5 +406,47 @@
 
 	.eye-btn[loading] {
 		color: rgba(255, 255, 255, 0.8);
+	}
+
+	.result-mask {
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		height: 70vh;
+		background: rgba(0, 0, 0, 0.7);
+		z-index: 999;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+		color: white;
+		text-align: center;
+	}
+
+	.result-content {
+		padding: 40rpx;
+	}
+
+	.result-location {
+		font-size: 32rpx;
+		margin-bottom: 20rpx;
+	}
+
+	.result-distance {
+		font-size: 28rpx;
+		margin-bottom: 20rpx;
+	}
+
+	.result-comment {
+		font-size: 36rpx;
+		color: #FFD700;
+	}
+
+	.audio-loading {
+		text-align: center;
+		padding: 20rpx;
+		color: #666;
+		font-size: 28rpx;
 	}
 </style>
