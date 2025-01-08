@@ -1,9 +1,29 @@
 {
 	"pages": [
+		
 		{
-			"path": "pages/game/index",
+			"path": "pages/gameSettings/index",
 			"style": {
-				"navigationBarTitleText": "方言地图游戏"
+				"navigationBarTitleText": "游戏设置"
+			}
+		},
+		
+		{
+			"path": "pages/randomwalk/index",
+			"style": {
+				"navigationBarTitleText": "随机漫步"
+			}
+		},
+		{
+			"path": "pages/regionchallenge/index",
+			"style": {
+				"navigationBarTitleText": "省份挑战"
+			}
+		},
+		{
+			"path": "pages/timergame/index",
+			"style": {
+				"navigationBarTitleText": "计时游戏"
 			}
 		},
 		{
@@ -33,6 +53,7 @@
 			}
 		}
 	],
+	
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "uni-app",
@@ -51,7 +72,7 @@
 			"selectedIconPath": "static/tabs/home-active.png",
 			"text": "首页"
 		}, {
-			"pagePath": "pages/game/index",
+			"pagePath": "pages/gameSettings/index",
 			"iconPath": "static/tabs/game.png",
 			"selectedIconPath": "static/tabs/game-active.png",
 			"text": "游戏"
