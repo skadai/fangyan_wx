@@ -7,6 +7,7 @@
     "weapp-tailwindcss": "^3.7.0"
   },
   "dependencies": {
-    "uview-plus": "^3.3.54"
+    "uview-plus": "^3.3.54",
+    "wx-server-sdk": "^3.0.1"
   }
 }
