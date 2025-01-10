@@ -17,17 +17,25 @@
 		<view class="player-section">
 			<!-- 音频播放器卡片 -->
 			<view class="card player-card">
-				
-				<audio 
-					:src="currentSong.src" 
-					:action="audioAction"
-					@play="onPlay"
-					@pause="onPause"
-					@canplay="onCanPlay"
-					@error="onAudioError"
-					@waiting="onAudioWaiting"
-					controls
-				></audio>
+				<!-- 自定义音频播放器 UI -->
+				<view class="audio-player">
+					<view class="audio-controls">
+						<button class="play-btn" @tap="togglePlay">
+							{{ isPlaying ? '暂停' : '播放' }}
+						</button>
+						<!-- 可选：添加进度条 -->
+						<slider 
+							:value="progress" 
+							@change="onSliderChange" 
+							step="1"
+							block-size="12"
+						/>
+					</view>
+					<!-- 加载状态 -->
+					<view v-if="audioLoading" class="audio-loading">
+						加载中...
+					</view>
+				</view>
 			</view>
 			
 			<!-- 城市信息卡片和答案展示 -->
@@ -120,10 +128,15 @@
 					comment: ''
 				},
 				audioLoading: true,
+				audioContext: null,
+				progress: 0,
+				duration: 0,
+				currentTime: 0,
 			}
 		},
 		onLoad() {
 			this.fetchQuestions()
+			this.initAudioContext()
 		},
 		methods: {
 			// 播放事件回调
@@ -256,23 +269,107 @@
 					this.showAnswerLoading = false
 				}
 			},
+
+		
 			
-			onCanPlay() {
-				this.audioLoading = false
-			},
-			
-			onAudioError(e) {
-				this.audioLoading = false
-				uni.showToast({
-					title: '音频加载失败',
-					icon: 'none'
+			initAudioContext() {
+				// 创建音频上下文
+				this.audioContext = uni.createInnerAudioContext()
+				
+				// 监听事件
+				this.audioContext.onCanplay(() => {
+					console.log('音频准备就绪')
+					this.audioLoading = false
+					this.duration = this.audioContext.duration
 				})
+				
+				this.audioContext.onPlay(() => {
+					console.log('开始播放')
+					this.isPlaying = true
+				})
+				
+				this.audioContext.onPause(() => {
+					console.log('暂停播放')
+					this.isPlaying = false
+				})
+				
+				this.audioContext.onError((res) => {
+					console.error('播放错误', res)
+					this.audioLoading = false
+					this.isPlaying = false
+					uni.showModal({
+						title: '提示',
+						content: '音频加载失败，是否重试？',
+						success: (res) => {
+							if (res.confirm) {
+								this.retryLoadAudio()
+							}
+						}
+					})
+				})
+				
+				this.audioContext.onTimeUpdate(() => {
+					this.currentTime = this.audioContext.currentTime
+					this.duration = this.audioContext.duration
+					this.progress = (this.currentTime / this.duration) * 100
+				})
+				
+				// 设置音频源
+				if (this.currentSong.src) {
+					this.audioContext.src = this.currentSong.src
+				}
 			},
 			
-			onAudioWaiting() {
-				this.audioLoading = true
+			togglePlay() {
+				if (this.isPlaying) {
+					this.audioContext.pause()
+					console.log('>>>>> pause')
+				} else {
+					this.audioContext.play()
+					console.log('>>>>> togglePlay', this.audioContext)
+				}
 			},
+			
+			onSliderChange(e) {
+				const position = e.detail.value
+				const time = (position / 100) * this.duration
+				this.audioContext.seek(time)
+			},
+			
+			// 重试加载
+			retryLoadAudio() {
+				if (this.audioContext) {
+					this.audioContext.destroy() // 销毁旧的实例
+				}
+				this.initAudioContext()
+			},
+			
+			// 更新音频源
+			updateAudioSource(src) {
+				if (this.audioContext) {
+					this.audioContext.stop()
+					this.audioContext.src = src
+					this.audioLoading = true
+					this.progress = 0
+					this.currentTime = 0
+				}
+			}
 		},
+		watch: {
+			'currentSong.src': {
+				handler(newSrc) {
+					if (newSrc && this.audioContext) {
+						this.updateAudioSource(newSrc)
+					}
+				}
+			}
+		},
+		onUnload() {
+			// 页面卸载时销毁音频实例
+			if (this.audioContext) {
+				this.audioContext.destroy()
+			}
+		}
 	}
 </script>
 
@@ -448,5 +545,28 @@
 		padding: 20rpx;
 		color: #666;
 		font-size: 28rpx;
+	}
+
+	.audio-player {
+		padding: 20rpx;
+	}
+
+	.audio-controls {
+		display: flex;
+		align-items: center;
+		gap: 20rpx;
+	}
+
+	.play-btn {
+		min-width: 120rpx;
+		padding: 10rpx 20rpx;
+		background: #2196F3;
+		color: white;
+		border-radius: 8rpx;
+		font-size: 28rpx;
+	}
+
+	slider {
+		flex: 1;
 	}
 </style>
