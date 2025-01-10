@@ -72,12 +72,13 @@ export default {
 }
 
 .card {
-  background-color: #ffffff;
+  background-color: #FFFDF9;
   border-radius: 16rpx;
   padding: 20rpx;
   display: flex;
   align-items: center;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4rpx 16rpx rgba(200, 180, 150, 0.15);
+  border: 1rpx solid rgba(200, 180, 150, 0.2);
   
   &:active {
     transform: scale(0.98);

@@ -28,6 +28,8 @@ export default {
 			provinceList: [
 				{ province: '北京', img_src: '/static/images/beijing.jpg' },
 				{ province: '上海', img_src: '/static/images/shanghai.jpg' },
+				{ province: '江苏', img_src: '/static/images/jiangsu.jpg' },
+				{ province: '安徽', img_src: '/static/images/anhui.jpg' },
 				// 其他省份数据...
 			]
 		}

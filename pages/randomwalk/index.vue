@@ -235,6 +235,9 @@
 					if (res) {
 						this.question = res
 						this.currentSong.src = `${import.meta.env.VITE_MEDIA_URL}/${res.source_id}`
+						this.audioContext.src = this.currentSong.src
+						this.audioContext.autoplay = false
+						this.audioContext.volume = 1
 						this.showAnswer = false
 						this.audioAction.method = 'pause'
 						this.showResult = false
@@ -275,6 +278,10 @@
 			initAudioContext() {
 				// 创建音频上下文
 				this.audioContext = uni.createInnerAudioContext()
+				this.audioContext.autoplay = false
+				this.audioContext.volume = 5  // 确保音量设置
+				
+				console.log('>>>>> 初始化音频')
 				
 				// 监听事件
 				this.audioContext.onCanplay(() => {
@@ -314,19 +321,41 @@
 					this.progress = (this.currentTime / this.duration) * 100
 				})
 				
-				// 设置音频源
-				if (this.currentSong.src) {
-					this.audioContext.src = this.currentSong.src
-				}
+				
 			},
 			
 			togglePlay() {
+				if (!this.audioContext || !this.audioContext.src) {
+					console.log('>>>>> 音频源未设置:', this.audioContext?.src)
+					return
+				}
+				
 				if (this.isPlaying) {
 					this.audioContext.pause()
 					console.log('>>>>> pause')
 				} else {
+					// 检查音频状态
+					console.log('>>>>> 播放前状态:', {
+						src: this.audioContext.src,
+						duration: this.audioContext.duration,
+						currentTime: this.audioContext.currentTime,
+						paused: this.audioContext.paused,
+						volume: this.audioContext.volume
+					})
+					
+					// 确保音量不为0
+					this.audioContext.volume = 1
 					this.audioContext.play()
-					console.log('>>>>> togglePlay', this.audioContext)
+					
+					// 添加播放成功的回调
+					this.audioContext.onPlay(() => {
+						console.log('>>>>> 开始播放成功')
+					})
+					
+					// 添加错误监听
+					this.audioContext.onError((res) => {
+						console.log('>>>>> 播放错误:', res)
+					})
 				}
 			},
 			
