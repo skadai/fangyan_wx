@@ -88,7 +88,21 @@ export default {
 			}
 		})
 	},
+	onUnload() {
+		this.resetAudioContext();
+	},
 	methods: {
+		destroyAudioContext() {
+				if (this.audioContext) {
+					try {
+						this.audioContext.pause()
+						this.audioContext.destroy()
+						this.audioContext = null
+					} catch (e) {
+						console.error('销毁音频实例失败：', e)
+					}
+				}
+		},
 		initAudioContext() {
 			this.audioContext = uni.createInnerAudioContext({useWebAudioImplement: false});
 			this.audioContext.autoplay = true;
