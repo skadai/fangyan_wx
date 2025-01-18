@@ -26,10 +26,10 @@ export default {
 		return {
 			searchText: '',
 			provinceList: [
-				{ province: '北京', img_src: '/static/images/beijing.jpg' },
-				{ province: '上海', img_src: '/static/images/shanghai.jpg' },
-				{ province: '江苏', img_src: '/static/images/jiangsu.jpg' },
-				{ province: '安徽', img_src: '/static/images/anhui.jpg' },
+				{ province: '北京', img_src: `${import.meta.env.VITE_IMAGE_URL}` + '/beijing.jpg' },
+				{ province: '上海', img_src: `${import.meta.env.VITE_IMAGE_URL}` + '/shanghai.jpg' },
+				{ province: '江苏', img_src: `${import.meta.env.VITE_IMAGE_URL}` + '/jiangsu.jpg' },
+				{ province: '安徽', img_src: `${import.meta.env.VITE_IMAGE_URL}` + '/anhui.jpg' },
 				// 其他省份数据...
 			]
 		}
@@ -45,7 +45,7 @@ export default {
 <style lang="scss">
 .container {
 	padding: 20rpx;
-	
+
 	.search-box {
 		padding: 20rpx;
 		border-radius: 10rpx;

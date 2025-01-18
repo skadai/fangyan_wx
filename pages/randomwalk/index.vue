@@ -17,30 +17,34 @@
 		<view class="player-section">
 			<!-- 音频播放器卡片 -->
 			<view class="card player-card">
-				<!-- 自定义音频播放器 UI -->
-				<view class="audio-player">
-					<view class="audio-controls">
-						<button class="play-btn" @tap="togglePlay">
-							{{ isPlaying ? '暂停' : '播放' }}
-						</button>
-						<!-- 可选：添加进度条 -->
+				<view class="audio-controls">
+					<button @tap="togglePlay" class="play-btn">
+						{{ isPlaying ? '暂停' : '播放' }}
+					</button>
+					
+					<view class="progress-container">
+						<!-- 当前时间 -->
+						<text class="time">{{ formatTime(currentTime) }}</text>
+						
+						<!-- 进度条 -->
 						<slider 
-							:value="progress" 
-							@change="onSliderChange" 
+							class="progress-bar"
+							:value="progress"
+							@change="onSliderChange"
+							@changing="onSliderChanging"
 							step="1"
 							block-size="12"
 						/>
-					</view>
-					<!-- 加载状态 -->
-					<view v-if="audioLoading" class="audio-loading">
-						加载中...
+						
+						<!-- 总时长 -->
+						<text class="time">{{ formatTime(duration) }}</text>
 					</view>
 				</view>
 			</view>
 			
 			<!-- 城市信息卡片和答案展示 -->
 			<view class="card info-card">
-				<text class="info-text">当前选择的城市是 {{ selected.city }}</text>
+				<text class="info-text">{{ selected.city ? `当前选择的城市是  ${selected.city}`: '请点击地图选择位置'}}</text>
 				
 				<!-- 答案区域 -->
 				<view v-if="showAnswer" class="answer-container">
@@ -69,7 +73,7 @@
 					@tap="toggleAnswer"
 					:loading="showAnswerLoading"
 					:disabled="showAnswerLoading"
-				>查看文本</button>
+				> {{ showAnswer ? '隐藏文本': '查看文本' }}</button>
 			</view>
 		</view>
 		
@@ -102,22 +106,18 @@
 					latitude: null,
 					longitude: null
 				},
-				audioAction: {
-					method: 'pause'
-				},
-
 				currentSong: {
 					src: 'https://pub-5933d092e74a4a95b1e16491c14ffe3f.r2.dev/15F39sp13kt0003',
 					title: '未知',
 					artist: '未知艺术家'
 				},
-				isPlaying: false,
 				question: {
 					source_id: null,
 					dialects: null,
 					madarin: null,
 				},
-				showAnswer: false,
+				isPlaying: false,
+				showAnswer: true,
 				submitLoading: false,
 				changeLoading: false,
 				showAnswerLoading: false,
@@ -127,19 +127,124 @@
 					distance: 0,
 					comment: ''
 				},
-				audioLoading: true,
-				audioContext: null,
-				progress: 0,
-				duration: 0,
 				currentTime: 0,
+				duration: 0,
+				progress: 0,
+				isSliding: false
 			}
 		},
 		onLoad() {
+		    this.resetAudioContext()
+			
+			this.innerAudioContext = uni.createInnerAudioContext({useWebAudioImplement: false})
+			this.innerAudioContext.autoplay = true
+			
+			this.innerAudioContext.onPlay(() => {
+				console.log('音频播放事件触发',innerAudioContext.paused)
+				this.isPlaying = true
+			})
+			
+			this.innerAudioContext.onPause(() => {
+				console.log('音频暂停事件触发')
+				this.isPlaying = false
+			})
+			
+			this.innerAudioContext.onStop(() => {
+				console.log('音频停止事件触发')
+				this.isPlaying = false
+			})
+			
+			this.innerAudioContext.onEnded(() => {
+				console.log('音频自然播放结束事件触发')
+				this.isPlaying = false
+			})
+			
+			this.innerAudioContext.onError((res) => {
+				console.error('播放错误：', res.errMsg, res.errCode)
+				uni.showToast({
+					title: '音频加载失败',
+					icon: 'none'
+				})
+				this.isPlaying = false
+				this.innerAudioContext.destroy()
+			})
+			
+			this.innerAudioContext.onCanplay(() => {
+				this.duration = this.innerAudioContext.duration
+				this.audioLoading = false
+			})
+			
+			this.innerAudioContext.onWaiting(() => {
+				this.audioLoading = true
+				console.log('音频加载中')
+			})
+			
+			// 监听播放进度
+			this.innerAudioContext.onTimeUpdate(() => {
+				if (!this.isSliding) {
+					this.currentTime = this.innerAudioContext.currentTime || 0
+					this.duration = this.innerAudioContext.duration || 0
+					this.progress = (this.currentTime / this.duration) * 100
+				}
+			})
+
 			this.fetchQuestions()
-			this.initAudioContext()
 		},
+		onUnload() {
+			// TODO 
+			this.resetAudioContext()
+		},
+		
 		methods: {
-			// 播放事件回调
+			resetAudioContext() {
+				if (this.innerAudioContext) {
+						try {
+							this.innerAudioContext.pause();
+							this.innerAudioContext.destroy()
+							this.innerAudioContext = null
+							console.log('reset audio context...')
+						} catch (e) {
+							//TODO handle the exception
+							console.log('reset error', e)
+						}
+				}
+			},	
+			
+			
+			destroyAudioContext() {
+				if (this.innerAudioContext) {
+					try {
+						this.innerAudioContext.pause()
+						this.innerAudioContext.destroy()
+						this.innerAudioContext = null
+					} catch (e) {
+						console.error('销毁音频实例失败：', e)
+					}
+				}
+			},
+			
+			togglePlay() {
+				if (!this.innerAudioContext) {
+					console.log('音频实例不存在')
+					return
+				}
+				
+				if (!this.innerAudioContext.paused) {
+					console.log('开始暂停...')
+					this.innerAudioContext.pause()
+					this.isPlaying = false
+					console.log('暂停后状态检查', this.innerAudioContext.paused)
+				} else {
+					console.log('开始播放...')
+					this.isPlaying = true
+					const playResult = this.innerAudioContext.play()
+					console.log('播放结果', playResult)
+					
+					
+				}
+			},
+			
+			
 			async onSubmitQuestion() {
 				if (this.submitLoading) return
 				this.submitLoading = true
@@ -188,21 +293,15 @@
 				
 				try {
 					await this.fetchQuestions()
+					
+									
+
 				} catch (error) {
 					console.error('切换问题失败：', error)
 				} finally {
 					this.changeLoading = false
 				}
 			},
-			onPlay() {
-				this.isPlaying = true
-			},
-			
-			// 暂停事件回调
-			onPause() {
-				this.isPlaying = false
-			},
-			
 			onMapTap(e) {
 				uni.request({
 					url: `https://apis.map.qq.com/ws/geocoder/v1/?location=${e.detail.latitude},${e.detail.longitude}&key=${import.meta.env.VITE_TENCENT_MAP_KEY}`,
@@ -225,7 +324,6 @@
 			
 			// 获取方言问题列表
 			async fetchQuestions() {
-				this.audioLoading = true // 重置加载状态
 				try {
 					const res = await request({
 						url: '/questions',
@@ -235,11 +333,10 @@
 					if (res) {
 						this.question = res
 						this.currentSong.src = `${import.meta.env.VITE_MEDIA_URL}/${res.source_id}`
-						this.audioContext.src = this.currentSong.src
-						this.audioContext.autoplay = false
-						this.audioContext.volume = 1
-						this.showAnswer = false
-						this.audioAction.method = 'pause'
+						this.showAnswer = true
+						if (this.innerAudioContext) {
+							this.innerAudioContext.src = this.currentSong.src
+						}
 						this.showResult = false
 						this.selected = {
 							city: null,
@@ -258,6 +355,7 @@
 						title: '网络错误，请重试',
 						icon: 'none'
 					})
+				} finally {
 				}
 			},
 			
@@ -272,133 +370,29 @@
 					this.showAnswerLoading = false
 				}
 			},
-
-		
 			
-			initAudioContext() {
-				// 创建音频上下文
-				this.audioContext = uni.createInnerAudioContext()
-				this.audioContext.autoplay = false
-				this.audioContext.volume = 5  // 确保音量设置
-				
-				console.log('>>>>> 初始化音频')
-				
-				// 监听事件
-				this.audioContext.onCanplay(() => {
-					console.log('音频准备就绪')
-					this.audioLoading = false
-					this.duration = this.audioContext.duration
-				})
-				
-				this.audioContext.onPlay(() => {
-					console.log('开始播放')
-					this.isPlaying = true
-				})
-				
-				this.audioContext.onPause(() => {
-					console.log('暂停播放')
-					this.isPlaying = false
-				})
-				
-				this.audioContext.onError((res) => {
-					console.error('播放错误', res)
-					this.audioLoading = false
-					this.isPlaying = false
-					uni.showModal({
-						title: '提示',
-						content: '音频加载失败，是否重试？',
-						success: (res) => {
-							if (res.confirm) {
-								this.retryLoadAudio()
-							}
-						}
-					})
-				})
-				
-				this.audioContext.onTimeUpdate(() => {
-					this.currentTime = this.audioContext.currentTime
-					this.duration = this.audioContext.duration
-					this.progress = (this.currentTime / this.duration) * 100
-				})
-				
-				
+			// 格式化时间
+			formatTime(time) {
+				const minutes = Math.floor(time / 60)
+				const seconds = Math.floor(time % 60)
+				return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
 			},
 			
-			togglePlay() {
-				if (!this.audioContext || !this.audioContext.src) {
-					console.log('>>>>> 音频源未设置:', this.audioContext?.src)
-					return
-				}
-				
-				if (this.isPlaying) {
-					this.audioContext.pause()
-					console.log('>>>>> pause')
-				} else {
-					// 检查音频状态
-					console.log('>>>>> 播放前状态:', {
-						src: this.audioContext.src,
-						duration: this.audioContext.duration,
-						currentTime: this.audioContext.currentTime,
-						paused: this.audioContext.paused,
-						volume: this.audioContext.volume
-					})
-					
-					// 确保音量不为0
-					this.audioContext.volume = 1
-					this.audioContext.play()
-					
-					// 添加播放成功的回调
-					this.audioContext.onPlay(() => {
-						console.log('>>>>> 开始播放成功')
-					})
-					
-					// 添加错误监听
-					this.audioContext.onError((res) => {
-						console.log('>>>>> 播放错误:', res)
-					})
-				}
-			},
-			
+			// 进度条改变结束
 			onSliderChange(e) {
-				const position = e.detail.value
-				const time = (position / 100) * this.duration
-				this.audioContext.seek(time)
+				const value = e.detail.value
+				const targetTime = (value / 100) * this.duration
+				this.innerAudioContext.seek(targetTime)
+				this.isSliding = false
 			},
 			
-			// 重试加载
-			retryLoadAudio() {
-				if (this.audioContext) {
-					this.audioContext.destroy() // 销毁旧的实例
-				}
-				this.initAudioContext()
-			},
-			
-			// 更新音频源
-			updateAudioSource(src) {
-				if (this.audioContext) {
-					this.audioContext.stop()
-					this.audioContext.src = src
-					this.audioLoading = true
-					this.progress = 0
-					this.currentTime = 0
-				}
+			// 进度条拖动中
+			onSliderChanging(e) {
+				this.isSliding = true
+				const value = e.detail.value
+				this.currentTime = (value / 100) * this.duration
 			}
 		},
-		watch: {
-			'currentSong.src': {
-				handler(newSrc) {
-					if (newSrc && this.audioContext) {
-						this.updateAudioSource(newSrc)
-					}
-				}
-			}
-		},
-		onUnload() {
-			// 页面卸载时销毁音频实例
-			if (this.audioContext) {
-				this.audioContext.destroy()
-			}
-		}
 	}
 </script>
 
@@ -576,26 +570,55 @@
 		font-size: 28rpx;
 	}
 
-	.audio-player {
+	.audio-controls {
+		display: flex;
+		justify-content: between;
 		padding: 20rpx;
 	}
 
-	.audio-controls {
+	.progress-container {
 		display: flex;
 		align-items: center;
-		gap: 20rpx;
+		margin-top: 20rpx;
+	}
+
+	.progress-bar {
+		flex: 1;
+		margin: 0 20rpx;
+	}
+
+	.time {
+		font-size: 24rpx;
+		color: #666;
+		min-width: 80rpx;
 	}
 
 	.play-btn {
-		min-width: 120rpx;
-		padding: 10rpx 20rpx;
-		background: #2196F3;
+		width: 160rpx;
+		height: 60rpx;
+		line-height: 60rpx;
+		text-align: center;
+		background-color: #007AFF;
 		color: white;
-		border-radius: 8rpx;
+		border-radius: 30rpx;
 		font-size: 28rpx;
+		margin: 0 auto;
 	}
 
-	slider {
-		flex: 1;
+	/* 进度条样式自定义 */
+	.progress-bar {
+		margin: 0 20rpx;
+	}
+
+	/* 滑块样式 */
+	.progress-bar .uni-slider-handle {
+		width: 24rpx;
+		height: 24rpx;
+		background-color: #007AFF;
+	}
+
+	/* 已播放部分的进度条颜色 */
+	.progress-bar .uni-slider-track {
+		background-color: #007AFF;
 	}
 </style>

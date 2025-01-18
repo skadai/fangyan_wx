@@ -17,17 +17,11 @@
 		<view class="player-section">
 			<!-- 音频播放器卡片 -->
 			<view class="card player-card">
-				
-				<audio 
-					:src="currentSong.src" 
-					:action="audioAction"
-					@play="onPlay"
-					@pause="onPause"
-					@canplay="onCanPlay"
-					@error="onAudioError"
-					@waiting="onAudioWaiting"
-					controls
-				></audio>
+				<view class="audio-controls">
+					<button @tap="togglePlay" :disabled="audioLoading">
+						{{ isPlaying ? '暂停' : '播放' }}
+					</button>
+				</view>
 			</view>
 			
 			<!-- 城市信息卡片和答案展示 -->
@@ -94,10 +88,7 @@
 					latitude: null,
 					longitude: null
 				},
-				audioAction: {
-					method: 'pause'
-				},
-
+				innerAudioContext: null,
 				currentSong: {
 					src: 'https://pub-5933d092e74a4a95b1e16491c14ffe3f.r2.dev/15F39sp13kt0003',
 					title: '未知',
@@ -124,8 +115,70 @@
 		},
 		onLoad() {
 			this.fetchQuestions()
+			this.initAudioContext()
+		},
+		onUnload() {
+			this.destroyAudioContext()
 		},
 		methods: {
+			initAudioContext() {
+				this.destroyAudioContext()
+				
+				this.innerAudioContext = uni.createInnerAudioContext()
+				this.innerAudioContext.src = this.currentSong.src
+				
+				this.innerAudioContext.onPlay(() => {
+					this.isPlaying = true
+					console.log('开始播放')
+				})
+				
+				this.innerAudioContext.onPause(() => {
+					this.isPlaying = false
+					console.log('暂停播放')
+				})
+				
+				this.innerAudioContext.onError((res) => {
+					console.error('播放错误：', res.errMsg, res.errCode)
+					this.audioLoading = false
+					uni.showToast({
+						title: '音频加载失败',
+						icon: 'none'
+					})
+				})
+				
+				this.innerAudioContext.onCanplay(() => {
+					this.audioLoading = false
+					console.log('音频就绪')
+				})
+				
+				this.innerAudioContext.onWaiting(() => {
+					this.audioLoading = true
+					console.log('音频加载中')
+				})
+			},
+			
+			destroyAudioContext() {
+				if (this.innerAudioContext) {
+					try {
+						this.innerAudioContext.pause()
+						this.innerAudioContext.destroy()
+						this.innerAudioContext = null
+					} catch (e) {
+						console.error('销毁音频实例失败：', e)
+					}
+				}
+			},
+			
+			togglePlay() {
+				if (this.audioLoading) return
+				
+				if (this.isPlaying) {
+					this.innerAudioContext.pause()
+				} else {
+					this.innerAudioContext.play()
+				}
+			},
+			
 			// 播放事件回调
 			async onSubmitQuestion() {
 				if (this.submitLoading) return
@@ -181,15 +234,6 @@
 					this.changeLoading = false
 				}
 			},
-			onPlay() {
-				this.isPlaying = true
-			},
-			
-			// 暂停事件回调
-			onPause() {
-				this.isPlaying = false
-			},
-			
 			onMapTap(e) {
 				uni.request({
 					url: `https://apis.map.qq.com/ws/geocoder/v1/?location=${e.detail.latitude},${e.detail.longitude}&key=${import.meta.env.VITE_TENCENT_MAP_KEY}`,
@@ -223,7 +267,7 @@
 						this.question = res
 						this.currentSong.src = `${import.meta.env.VITE_MEDIA_URL}/${res.source_id}`
 						this.showAnswer = false
-						this.audioAction.method = 'pause'
+						this.initAudioContext()
 						this.showResult = false
 						this.selected = {
 							city: null,
@@ -255,22 +299,6 @@
 				} finally {
 					this.showAnswerLoading = false
 				}
-			},
-			
-			onCanPlay() {
-				this.audioLoading = false
-			},
-			
-			onAudioError(e) {
-				this.audioLoading = false
-				uni.showToast({
-					title: '音频加载失败',
-					icon: 'none'
-				})
-			},
-			
-			onAudioWaiting() {
-				this.audioLoading = true
 			},
 		},
 	}
@@ -448,5 +476,11 @@
 		padding: 20rpx;
 		color: #666;
 		font-size: 28rpx;
+	}
+
+	.audio-controls {
+		display: flex;
+		justify-content: center;
+		padding: 20rpx;
 	}
 </style>
