@@ -1,50 +1,35 @@
 <template>
 	<view class="container">
-		<!-- 地图部分 -->
-		<view class="map-section">
-			<map
-				class="map"
-				:latitude="latitude"
-				:longitude="longitude"
-				show-location
-				:enable-scroll="true"
-				:scale="16"
-				@tap="onMapTap"
-			></map>
-		</view>
-		
-		<!-- 重新组织播放器部分 -->
+		<!-- 播放器部分 -->
 		<view class="player-section">
-			<!-- 音频播放器卡片 -->
-			<view class="card player-card">
-				<view class="audio-controls">
-					<!-- 播放按钮 -->
-					<view class="play-btn-wrapper">
-						<button @tap="togglePlay" class="play-btn">
-							{{ isPlaying ? '暂停' : '播放' }}
-						</button>
-					</view>
+			<!-- 播放控制区域 -->
+			<view class="player-controls">
+				<!-- 播放按钮 -->
+				<view class="play-btn-wrapper">
+					<button @tap="togglePlay" class="play-btn">
+						{{ isPlaying ? '暂停' : '播放' }}
+					</button>
+				</view>
+				
+				<!-- 进度控制区域 -->
+				<view class="progress-container">
+					<!-- 当前时间 -->
+					<text class="time">{{ formatTime(currentTime) }}</text>
 					
-					<!-- 进度控制区域 -->
-					<view class="progress-container">
-						<!-- 当前时间 -->
-						<text class="time">{{ formatTime(currentTime) }}</text>
-						
-						<!-- 进度条 -->
-						<slider 
-							class="progress-bar"
-							:value="progress"
-							@change="onSliderChange"
-							@changing="onSliderChanging"
-							step="1"
-							block-size="12"
-							activeColor="#007AFF"
-							backgroundColor="#DDDDDD"
-						/>
-						
-						<!-- 总时长 -->
-						<text class="time">{{ formatTime(duration) }}</text>
-					</view>
+					<!-- 进度条 -->
+					<slider 
+						class="progress-bar"
+						:value="progress"
+						@change="onSliderChange"
+						@changing="onSliderChanging"
+						step="1"
+						block-size="12"
+						activeColor="#007AFF"
+						backgroundColor="#DDDDDD"
+					/>
+					
+					<!-- 总时长 -->
+					<text class="time">{{ formatTime(duration) }}</text>
 				</view>
 			</view>
 			
@@ -83,18 +68,47 @@
 			</view>
 		</view>
 		
-		<!-- 结果遮罩层 -->
-		<view v-if="showResult" class="result-mask">
-			<view class="result-content">
-				<view class="result-location">
-					方言所在：{{ result.correct }} - 你的猜测：{{ selected.city }}
-				</view>
-				<view class="result-distance">
-					偏差 {{ result.distance }}公里
-				</view>
-				<view class="result-comment">
-					{{ result.comment }}
-				</view>
+		<!-- 地图容器 -->
+		<view class="map-container">
+			<map
+				class="map"
+				:latitude="latitude"
+				:longitude="longitude"
+				show-location
+				:enable-scroll="true"
+				:scale="6"
+				@tap="onMapTap"
+			></map>
+		</view>
+		
+		<!-- 搜索框部分 -->
+		<view class="search-container">
+			<input 
+				class="search-input" 
+				v-model="searchAddress" 
+				placeholder="输入地址搜索" 
+				@confirm="handleSearch"
+			/>
+			<button 
+				class="search-btn" 
+				size="mini" 
+				@tap="handleSearch"
+			>搜索</button>
+		</view>
+	</view>
+	
+	<!-- 结果遮罩层 -->
+	<view v-if="showResult" class="result-mask">
+		<view class="result-content">
+			<view class="close-btn" @tap="closeResult">×</view>
+			<view class="result-location">
+				方言所在：{{ result.correct }} - 你的猜测：{{ selected.city }}
+			</view>
+			<view class="result-distance">
+				偏差 {{ result.distance }}公里
+			</view>
+			<view class="result-comment">
+				{{ result.comment }}
 			</view>
 		</view>
 	</view>
@@ -109,6 +123,7 @@
 	export default {
 		data() {
 			return {
+				searchAddress: '',
 				latitude: 39.909,
 				longitude: 116.397,
 				selected: {
@@ -409,6 +424,48 @@
 				this.isSliding = true
 				const value = e.detail.value
 				this.currentTime = (value / 100) * this.duration
+			},
+			
+			async handleSearch() {
+				if (!this.searchAddress.trim()) {
+					return
+				}
+				
+				try {
+					const res = await new Promise((resolve, reject) => {
+						uni.request({
+							url: `https://apis.map.qq.com/ws/geocoder/v1/?address=${encodeURIComponent(this.searchAddress)}&key=${import.meta.env.VITE_TENCENT_MAP_KEY}`,
+							success: resolve,
+							fail: reject
+						})
+					})
+					console.log('res', res)
+					
+					if (res.data && res.data.status === 0 && res.data.result) {
+						const { location } = res.data.result
+						this.latitude = location.lat
+						this.longitude = location.lng
+						
+						uni.showToast({
+							title: '位置已更新',
+							icon: 'success'
+						})
+					} else {
+						uni.showToast({
+							title: '未找到该地址',
+							icon: 'error'
+						})
+					}
+				} catch (error) {
+					console.error('搜索地址失败:', error)
+					uni.showToast({
+						title: '搜索失败',
+						icon: 'error'
+					})
+				}
+			},
+			closeResult() {
+				this.showResult = false
 			}
 		},
 	}
@@ -416,18 +473,24 @@
 
 <style>
 	.container {
-		width: 100%;
 		height: 100vh;
-		position: relative;
+		display: flex;
+		flex-direction: column;
 	}
 
-	.map-section {
-		width: 100%;
-		height: 100%;
+	.player-section {
+		flex-shrink: 0;
+		/* ... 其他现有样式 ... */
+	}
+
+	.map-container {
 		position: absolute;
-		top: 0;
+		top: 0rpx;  /* 根据播放器实际高度调整 */
 		left: 0;
-		z-index: 1;
+		right: 0;
+		bottom: 0;
+		width: 100%;
+		z-index: -100;
 	}
 
 	.map {
@@ -435,12 +498,48 @@
 		height: 100%;
 	}
 
-	.player-section {
+	.search-container {
 		position: absolute;
-		top: 20rpx;
+		bottom: 40rpx;
 		left: 20rpx;
 		right: 20rpx;
-		z-index: 2;
+		/* ... 其他现有样式 ... */
+	}
+
+	.player-controls {
+		display: flex;
+		align-items: center;
+		padding: 0 20rpx;
+	}
+
+	.play-btn-wrapper {
+		flex-shrink: 0;
+		margin-right: 20rpx;
+		margin-top: 10rpx;
+	}
+
+	.play-btn {
+		min-width: 120rpx;
+		height: 60rpx;
+		line-height: 60rpx;
+		font-size: 28rpx;
+		padding: 0 20rpx;
+	}
+
+	.progress-container {
+		flex: 1;
+		display: flex;
+		align-items: center;
+	}
+
+	.time {
+		font-size: 24rpx;
+		color: #666;
+		margin: 0 10rpx;
+	}
+
+	.progress-bar {
+		flex: 1;
 	}
 
 	.card {
@@ -449,11 +548,6 @@
 		padding: 16rpx 24rpx;
 		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
 		margin-bottom: 20rpx;
-	}
-
-	.player-card {
-		margin-bottom: 20rpx;
-		position: relative;
 	}
 
 	.info-card {
@@ -561,6 +655,7 @@
 
 	.result-content {
 		padding: 40rpx;
+		position: relative;
 	}
 
 	.result-location {
@@ -589,6 +684,7 @@
 		padding: 20rpx;
 		background: #fff;
 		border-radius: 12rpx;
+		
 	}
 
 	.play-btn-wrapper {
@@ -644,5 +740,60 @@
 
 	:deep(.uni-slider-track) {
 		height: 4rpx !important;
+	}
+
+	.search-container {
+		position: fixed;
+		bottom: 40rpx;
+		left: 20rpx;
+		right: 20rpx;
+		z-index: 100;
+		display: flex;
+		align-items: center;
+		padding: 10rpx;
+		background: rgba(255, 255, 255, 0.9);
+		border-radius: 8rpx;
+		box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
+	}
+
+	.search-input {
+		flex: 1;
+		height: 70rpx;
+		padding: 0 20rpx;
+		font-size: 28rpx;
+		background: #fff;
+		border-radius: 4rpx;
+		font-family: 'HWMC', PingFang SC, Microsoft YaHei, sans-serif;
+	}
+
+	.search-btn {
+		margin-left: 20rpx;
+		background: #007AFF;
+		color: #fff;
+		font-family: 'HWMC', PingFang SC, Microsoft YaHei, sans-serif;
+	}
+
+	.map {
+		width: 100%;
+		height: 100vh;
+	}
+
+	.close-btn {
+		position: absolute;
+		top: 10rpx;
+		right: 10rpx;
+		width: 60rpx;
+		height: 60rpx;
+		line-height: 60rpx;
+		text-align: center;
+		font-size: 40rpx;
+		color: #666;
+		cursor: pointer;
+		z-index: 1;
+		border-radius: 50%;
+	}
+
+	.close-btn:active {
+		background-color: rgba(0, 0, 0, 0.1);
 	}
 </style>
