@@ -6,7 +6,7 @@
 			wx.loadFontFace({
 				global: true,  // 是否全局生效
 				family: 'HWMC',
-				source: 'url("/static/fonts/hwmc.woff2")',
+				source: `url(${import.meta.env.VITE_IMAGE_URL}/hwmc.woff2)`,
 				success: function(res) {
 					console.log('字体加载成功', res)
 				},
