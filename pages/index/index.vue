@@ -28,9 +28,12 @@
 				:province="record.province"
 				:city="record.city"
 				:author="record.author || '未知'"
+				:route="currentRoute"
+				:isPlaying="currentPlayingSrc === record.source_id"
+				@play="handleAudioPlay"
 			/>
 			<view v-if="loading" class="loading">加载中...</view>
-			<view v-if="records.length === 0" class="empty-tip">
+			<view v-if="records.length === 0 && !loading" class="empty-tip">
 				暂无相关方言记录
 			</view>
 		</scroll-view>
@@ -62,9 +65,18 @@ export default {
 			records: [],
 			pageSize: 8,
 			loading: false,
+			currentRoute: '',
+			audioContext: null,
+			currentPlayingSrc: '',
 		}
 	},
+	created() {
+		this.initAudioContext();
+	},
 	onLoad() {
+		// 获取当前路由
+		this.currentRoute = this.$route?.path || '';
+		
 		// 获取用户位置
 		uni.getLocation({
 			type: 'gcj02',
@@ -77,6 +89,54 @@ export default {
 		})
 	},
 	methods: {
+		initAudioContext() {
+			this.audioContext = uni.createInnerAudioContext({useWebAudioImplement: false});
+			this.audioContext.autoplay = true;
+			this.audioContext.onPlay(() => {
+				console.log('音频播放事件触发');
+			});
+			
+			this.audioContext.onPause(() => {
+				console.log('音频暂停事件触发');
+				this.currentPlayingSrc = '';
+			});
+			
+			this.audioContext.onStop(() => {
+				console.log('音频停止事件触发');
+				this.currentPlayingSrc = '';
+			});
+			
+			this.audioContext.onEnded(() => {
+				console.log('音频自然播放结束事件触发');
+				this.currentPlayingSrc = '';
+			});
+			
+			this.audioContext.onError((res) => {
+				console.error('播放错误：', res.errMsg, res.errCode);
+				uni.showToast({
+					title: '音频加载失败',
+					icon: 'none'
+				});
+				this.currentPlayingSrc = '';
+			});
+		},
+		
+		handleAudioPlay(src) {
+			if (this.currentPlayingSrc === src) {
+				// 暂停当前播放
+				console.log('audioContext 暂停', this.audioContext.src)
+				this.audioContext.pause();
+				this.currentPlayingSrc = '';
+			} else {
+				// 播放新的音频
+
+				this.audioContext.src = `${import.meta.env.VITE_MEDIA_URL}/${src}`;
+				console.log('audioContext 播放', this.audioContext.src)
+				this.audioContext.play();
+				this.currentPlayingSrc = src;
+			}
+		},
+		
 		async handleSearch() {
 			
 			
@@ -118,6 +178,11 @@ export default {
 			if (this.hasMore) {
 				this.fetchRecords();
 			}
+		}
+	},
+	beforeDestroy() {
+		if (this.audioContext) {
+			this.audioContext.destroy();
 		}
 	}
 }

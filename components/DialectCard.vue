@@ -39,15 +39,21 @@ export default {
     author: {
       type: String,
       required: true
+    },
+    route: {
+      type: String,
+      default: ''
+    },
+    isPlaying: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
     return {
-      isPlaying: false,
-      audioContext: null,
       isExpanded: false,
-      lineHeight: 45, // 30rpx * 1.5 line-height
-      maxHeight: 270  // 45 * 6 显示6行
+      lineHeight: 45,
+      maxHeight: 270
     }
   },
   computed: {
@@ -63,27 +69,19 @@ export default {
       return needExpand;
     }
   },
+  created() {
+    
+  },
   methods: {
     handlePlay() {
-      // 音频播放逻辑
-      if (!this.audioContext) {
-        this.audioContext = uni.createInnerAudioContext({useWebAudioImplement: false});
-        this.audioContext.autoplay = true;
-        this.audioContext.src = `${import.meta.env.VITE_MEDIA_URL}/${this.src}`;
-
-        console.log('audioContext', this.audioContext.src)
-      }
-      
-      if (this.isPlaying) {
-        this.audioContext.pause();
-      } else {
-        this.audioContext.play();
-      }
-      this.isPlaying = !this.isPlaying;
+      this.$emit('play', this.src);
     },
     toggleExpand() {
       this.isExpanded = !this.isExpanded;
     }
+  },
+  beforeDestroy() {
+    
   }
 }
 </script>
