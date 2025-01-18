@@ -9,8 +9,8 @@
     <view class="card-footer">
       <text class="location">{{province}} · {{city}}</text>
       <text class="author">{{author}}</text>
-      <button class="play-btn" @tap="handlePlay">
-        <text class="iconfont">{{isPlaying ? '暂停' : '播放'}}</text>
+      <button class="play-btn" :class="{ 'playing': isPlaying }" @tap="handlePlay">
+        <text class="iconfont">{{isPlaying ? '播放中' : '播放'}}</text>
       </button>
     </view>
   </view>
@@ -136,6 +136,10 @@ export default {
   padding: 10rpx 30rpx;
   border-radius: 30rpx;
   margin: 0;
+}
+
+.play-btn.playing {
+  background: #FF3B30;  /* 播放中时的红色背景 */
 }
 
 .expand-btn {

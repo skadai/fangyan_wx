@@ -122,18 +122,26 @@ export default {
 		},
 		
 		handleAudioPlay(src) {
+			if (!this.audioContext) {
+				console.log('音频实例不存在');
+				return;
+			}
+
 			if (this.currentPlayingSrc === src) {
 				// 暂停当前播放
-				console.log('audioContext 暂停', this.audioContext.src)
-				this.audioContext.pause();
-				this.currentPlayingSrc = '';
+				if (!this.audioContext.paused) {
+					console.log('开始暂停...');
+					this.audioContext.pause();
+					this.currentPlayingSrc = '';
+					console.log('暂停后状态检查', this.audioContext.paused);
+				}
 			} else {
 				// 播放新的音频
-
+				console.log('开始播放新音频...');
 				this.audioContext.src = `${import.meta.env.VITE_MEDIA_URL}/${src}`;
-				console.log('audioContext 播放', this.audioContext.src)
-				this.audioContext.play();
 				this.currentPlayingSrc = src;
+				const playResult = this.audioContext.play();
+				console.log('播放结果', playResult);
 			}
 		},
 		
