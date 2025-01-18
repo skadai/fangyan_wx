@@ -14,58 +14,113 @@
 			</view>
 		</view>
 		
-		
+		<!-- 方言记录列表 -->
+		<scroll-view 
+			class="records-list"
+			scroll-y
+			@scrolltolower="loadMore"
+		>
+			<dialect-card
+				v-for="(record, index) in records"
+				:key="index"
+				:src="record.source_id"
+				:text="record.dialects"
+				:province="record.province"
+				:city="record.city"
+				:author="record.author || '未知'"
+			/>
+			<view v-if="loading" class="loading">加载中...</view>
+			<view v-if="records.length === 0" class="empty-tip">
+				暂无相关方言记录
+			</view>
+		</scroll-view>
 	</view>
 </template>
 
 <script>
-	export default {
-		data() {
-			return {
-				title: 'Hello',
-				isPlaying: false,
-				progress: 0,
+import DialectCard from '@/components/DialectCard.vue'
+import { request } from '@/utils/request'
+
+export default {
+	components: {
+		DialectCard
+	},
+	data() {
+		return {
+			title: 'Hello',
+			isPlaying: false,
+			progress: 0,
+			latitude: 39.909,
+			longitude: 116.397,
+			markers: [{
+				id: 1,
 				latitude: 39.909,
 				longitude: 116.397,
-				markers: [{
-					id: 1,
-					latitude: 39.909,
-					longitude: 116.397,
-					title: '当前位置'
-				}],
-				searchKeyword: '',
+				title: '当前位置'
+			}],
+			searchKeyword: '',
+			records: [],
+			pageSize: 8,
+			loading: false,
+		}
+	},
+	onLoad() {
+		// 获取用户位置
+		uni.getLocation({
+			type: 'gcj02',
+			success: (res) => {
+				this.latitude = res.latitude
+				this.longitude = res.longitude
+				this.markers[0].latitude = res.latitude
+				this.markers[0].longitude = res.longitude
+			}
+		})
+	},
+	methods: {
+		async handleSearch() {
+			
+			
+			this.records = [];
+			await this.fetchRecords();
+		},
+		
+		async fetchRecords() {
+			if (this.loading) return;
+			
+			this.loading = true;
+			try {
+				const response = await request({
+					url: '/search',
+					method: 'POST',
+					data: {
+						keyword: this.searchKeyword,
+						page: 1,
+						pageSize: this.pageSize
+					}
+				});
+				
+				this.records = response.data;
+
+				
+				
+			} catch (error) {
+				console.log('search error', error)
+				uni.showToast({
+					title: '搜索失败，请重试',
+					icon: 'none'
+				});
+			} finally {
+				this.loading = false;
 			}
 		},
-		onLoad() {
-			// 获取用户位置
-			uni.getLocation({
-				type: 'gcj02',
-				success: (res) => {
-					this.latitude = res.latitude
-					this.longitude = res.longitude
-					this.markers[0].latitude = res.latitude
-					this.markers[0].longitude = res.longitude
-				}
-			})
-		},
-		methods: {
-			
-			handleSearch() {
-				if (!this.searchKeyword.trim()) {
-					uni.showToast({
-						title: '请输入搜索关键词',
-						icon: 'none'
-					});
-					return;
-				}
-				
-				// 跳转到搜索结果页面
-				uni.navigateTo({
-					url: `/pages/search/index?keyword=${encodeURIComponent(this.searchKeyword)}`
-				});
+		
+		loadMore() {
+			if (this.hasMore) {
+				this.fetchRecords();
 			}
 		}
 	}
+}
 </script>
 
 <style>
@@ -170,5 +225,24 @@
 		font-size: 28rpx;
 		padding: 0 30rpx;
 		margin-left: 20rpx;
+	}
+
+	.records-list {
+		flex: 1;
+		width: 100%;
+	}
+
+	.loading {
+		text-align: center;
+		padding: 20rpx;
+		color: #999;
+		font-size: 24rpx;
+	}
+
+	.empty-tip {
+		text-align: center;
+		padding: 40rpx;
+		color: #999;
+		font-size: 28rpx;
 	}
 </style>

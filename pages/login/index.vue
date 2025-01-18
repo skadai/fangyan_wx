@@ -7,7 +7,7 @@
         src="/static/logo.png" 
         mode="aspectFit"
       />
-      <view class="title">方言挑战</view>
+      <view class="title">方言地图</view>
       <view class="subtitle">探索中国方言的独特魅力</view>
     </view>
 
@@ -52,7 +52,7 @@ export default {
         this.closePopup()
         // 替换为重定向到首页或其他目标页面
         uni.switchTab({
-          url: '/pages/index/index'
+          url: '/pages/gameSettings/index'
         })
       } catch (error) {
         uni.showToast({
