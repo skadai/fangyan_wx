@@ -18,10 +18,14 @@
 			<!-- 音频播放器卡片 -->
 			<view class="card player-card">
 				<view class="audio-controls">
-					<button @tap="togglePlay" class="play-btn">
-						{{ isPlaying ? '暂停' : '播放' }}
-					</button>
+					<!-- 播放按钮 -->
+					<view class="play-btn-wrapper">
+						<button @tap="togglePlay" class="play-btn">
+							{{ isPlaying ? '暂停' : '播放' }}
+						</button>
+					</view>
 					
+					<!-- 进度控制区域 -->
 					<view class="progress-container">
 						<!-- 当前时间 -->
 						<text class="time">{{ formatTime(currentTime) }}</text>
@@ -34,6 +38,8 @@
 							@changing="onSliderChanging"
 							step="1"
 							block-size="12"
+							activeColor="#007AFF"
+							backgroundColor="#DDDDDD"
 						/>
 						
 						<!-- 总时长 -->
@@ -96,6 +102,10 @@
 
 <script>
 	import { request } from '@/utils/request'
+	import { useUserStore } from '@/stores/user'
+
+	const userStore = useUserStore()
+
 	export default {
 		data() {
 			return {
@@ -189,6 +199,14 @@
 			})
 
 			this.fetchQuestions()
+
+			// 检查是否登录
+			if (!userStore.isLoggedIn) {
+				uni.navigateTo({
+					url: '/pages/login/index'
+				})
+				return
+			}
 		},
 		onUnload() {
 			// TODO 
@@ -453,25 +471,31 @@
 		justify-content: space-between;
 		gap: 20rpx;
 		margin-top: 20rpx;
+		padding: 0 20rpx;
 	}
 
 	.btn {
-		flex: 1;
-		padding: 20rpx 0;
-		border-radius: 8rpx;
-		font-size: 28rpx;
+		width: 160rpx;
+		height: 60rpx;
+		line-height: 60rpx;
 		text-align: center;
-		border: none;
+		border-radius: 30rpx;
+		font-size: 28rpx;
+		padding: 0;
+		margin: 0;
+		color: white;
 	}
 
 	.submit-btn {
 		background-color: #4CAF50;
-		color: white;
 	}
 
 	.change-btn {
 		background-color: #2196F3;
-		color: white;
+	}
+
+	.eye-btn {
+		background-color: #9E9E9E;
 	}
 
 	.answer-container {
@@ -512,20 +536,11 @@
 	/* 禁用状态样式 */
 	.btn[disabled] {
 		opacity: 0.7;
-		cursor: not-allowed;
 	}
 
 	/* loading 状态下的文字颜色调整 */
-	.submit-btn[loading] {
-		color: rgba(255, 255, 255, 0.8);
-	}
-
-	.change-btn[loading] {
-		color: rgba(255, 255, 255, 0.8);
-	}
-
-	.eye-btn[loading] {
-		color: rgba(255, 255, 255, 0.8);
+	.btn[loading] {
+		opacity: 0.8;
 	}
 
 	.result-mask {
@@ -571,26 +586,15 @@
 	}
 
 	.audio-controls {
-		display: flex;
-		justify-content: between;
 		padding: 20rpx;
+		background: #fff;
+		border-radius: 12rpx;
 	}
 
-	.progress-container {
+	.play-btn-wrapper {
 		display: flex;
-		align-items: center;
-		margin-top: 20rpx;
-	}
-
-	.progress-bar {
-		flex: 1;
-		margin: 0 20rpx;
-	}
-
-	.time {
-		font-size: 24rpx;
-		color: #666;
-		min-width: 80rpx;
+		justify-content: center;
+		margin-bottom: 20rpx;
 	}
 
 	.play-btn {
@@ -602,23 +606,43 @@
 		color: white;
 		border-radius: 30rpx;
 		font-size: 28rpx;
-		margin: 0 auto;
+		padding: 0;
+		margin: 0;
 	}
 
-	/* 进度条样式自定义 */
+	.progress-container {
+		display: flex;
+		align-items: center;
+		padding: 0 20rpx;
+	}
+
 	.progress-bar {
+		flex: 1;
 		margin: 0 20rpx;
+		width: auto;
 	}
 
-	/* 滑块样式 */
-	.progress-bar .uni-slider-handle {
-		width: 24rpx;
-		height: 24rpx;
-		background-color: #007AFF;
+	.time {
+		font-size: 24rpx;
+		color: #666;
+		min-width: 80rpx;
+		text-align: center;
 	}
 
-	/* 已播放部分的进度条颜色 */
-	.progress-bar .uni-slider-track {
-		background-color: #007AFF;
+	/* 确保进度条在容器中正确显示 */
+	:deep(.uni-slider) {
+		margin: 0;
+		padding: 0;
+	}
+
+	:deep(.uni-slider-handle) {
+		width: 24rpx !important;
+		height: 24rpx !important;
+		background-color: #007AFF !important;
+		box-shadow: 0 0 6rpx rgba(0, 0, 0, 0.1);
+	}
+
+	:deep(.uni-slider-track) {
+		height: 4rpx !important;
 	}
 </style>

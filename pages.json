@@ -1,6 +1,11 @@
 {
 	"pages": [
-
+		{
+			"path": "pages/login/index",
+			"style": {
+				"navigationBarTitleText": "登录"
+			}
+		},
 		{
 			"path": "pages/gameSettings/index",
 			"style": {
@@ -52,6 +57,7 @@
 				"navigationBarTitleText": "贡献"
 			}
 		}
+		
 	],
 	
 	"globalStyle": {
