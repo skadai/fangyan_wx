@@ -2,29 +2,32 @@
   <view class="container">
     <view class="card-list">
       <!-- 随机漫步卡片 -->
-      <view class="card" @tap="navigateToGame('random')">
+      <view class="card" @tap="navigateToGame('random')" 
+            style="background-image: url('https://img.cdn.dialectmap.site/free.png')">
         <image class="card-image" src="/static/images/random-walk.png"></image>
         <view class="card-content">
           <view class="card-title">随机漫步</view>
-          <view class="card-desc">自由探索地图，随机生成目的地</view>
+          <view class="card-desc">自由探索各地区方言</view>
         </view>
       </view>
       
       <!-- 省份挑战卡片 -->
-      <view class="card" @tap="navigateToGame('province')">
+      <view class="card" @tap="navigateToGame('province')"
+            style="background-image: url('https://img.cdn.dialectmap.site/province.png')">
         <image class="card-image" src="/static/images/province.png"></image>
         <view class="card-content">
-          <view class="card-title">省份挑战</view>
-          <view class="card-desc">测试你对中国省份的认知</view>
+          <view class="card-title">地区挑战</view>
+          <view class="card-desc">测试你对特定省份方言的认知</view>
         </view>
       </view>
       
       <!-- 计时游戏卡片 -->
-      <view class="card" @tap="navigateToGame('timer')">
+      <view class="card" @tap="navigateToGame('timer')"
+            style="background-image: url('https://img.cdn.dialectmap.site/timer.png')">
         <image class="card-image" src="/static/images/timer.png"></image>
         <view class="card-content">
           <view class="card-title">计时游戏</view>
-          <view class="card-desc">限时寻找目标位置</view>
+          <view class="card-desc">限时寻找方言目标位置</view>
         </view>
       </view>
     </view>
@@ -57,7 +60,7 @@ export default {
 
 <style lang="scss">
 .container {
-  padding: 20rpx;
+  padding: 30rpx;
   background-color: #FFF9E6;
   min-height: 100vh;
   display: flex;
@@ -67,29 +70,50 @@ export default {
 .card-list {
   display: flex;
   flex-direction: column;
-  gap: 50rpx;
+  gap: 40rpx;
   width: 100%;
 }
 
 .card {
   background-color: #FFFDF9;
-  border-radius: 16rpx;
-  padding: 20rpx;
+  border-radius: 20rpx;
+  padding: 40rpx;
   display: flex;
   align-items: center;
   box-shadow: 0 4rpx 16rpx rgba(200, 180, 150, 0.15);
   border: 1rpx solid rgba(200, 180, 150, 0.2);
+  height: 180rpx;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 253, 249, 0.85);
+    border-radius: 20rpx;
+  }
   
   &:active {
     transform: scale(0.98);
   }
+  
+  .card-image,
+  .card-content {
+    position: relative;
+    z-index: 1;
+  }
 }
 
 .card-image {
-  width: 120rpx;
-  height: 120rpx;
-  border-radius: 12rpx;
-  margin-right: 20rpx;
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 16rpx;
+  margin-right: 30rpx;
 }
 
 .card-content {
@@ -100,14 +124,14 @@ export default {
 }
 
 .card-title {
-  font-size: 32rpx;
+  font-size: 40rpx;
   font-weight: bold;
   color: #333;
-  margin-bottom: 8rpx;
+  margin-bottom: 16rpx;
 }
 
 .card-desc {
-  font-size: 26rpx;
+  font-size: 32rpx;
   color: #666;
 }
 </style> 

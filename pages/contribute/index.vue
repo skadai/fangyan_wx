@@ -31,6 +31,7 @@
 					placeholder="请输入方言文字内容"
 					class="text-input"
 				/>
+			
 			</view>
 
 			<!-- 地区选择 -->
@@ -46,7 +47,6 @@
 					</view>
 				</picker>
 				<input 
-					type="text"
 					v-model="formData.county"
 					placeholder="选填：请输入所在县/区"
 					class="county-input"
@@ -204,7 +204,7 @@ export default {
 	height: 100px;
 	border: 1px solid #ddd;
 	border-radius: 4px;
-	padding: 10px;
+	padding: 5px;
 }
 
 .picker-text {
@@ -264,10 +264,19 @@ export default {
 	font-size: 14px;
 }
 
-/* 添加 placeholder 样式 */
-.county-input::placeholder {
-	font-family: 'HWMC';  /* 继承父元素字体 */
-	color: #999;  /* 设置与 text-input 相同的颜色 */
-	font-size: 14px;  /* 设置与 text-input 相同的字号 */
+.input-section {
+	width: 100%;
+	padding: 0 15px;
+	box-sizing: border-box;
 }
+
+.text-input {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.county-input {
+	margin-top: 10px;
+}
+
 </style>

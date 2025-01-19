@@ -5,7 +5,9 @@
         hover-start-time="20"
         @tap="handleCardClick">
     <image :src="img_src" mode="aspectFill" class="card-bg"></image>
-    <text class="province-name">{{ province }}</text>
+    <view class="text-wrapper">
+      <text class="province-name">{{ province }}</text>
+    </view>
   </view>
 </template>
 
@@ -50,13 +52,19 @@ export default {
     left: 0;
   }
   
-  .province-name {
+  .text-wrapper {
     position: absolute;
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.4);
+    padding: 10rpx 30rpx;
+    border-radius: 10rpx;
+  }
+  
+  .province-name {
     color: #fff;
-    font-size: 36rpx;
+    font-size: 48rpx;
     font-weight: bold;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
   }

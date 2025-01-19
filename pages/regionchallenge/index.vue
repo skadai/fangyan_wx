@@ -5,7 +5,7 @@
 		</view>
 		<view>
 			<province-card
-				v-for="(item, index) in provinceList"
+				v-for="(item, index) in filteredProvinceList"
 				:key="index"
 				:img_src="item.img_src"
 				:province="item.province"
@@ -17,6 +17,7 @@
 
 <script>
 import ProvinceCard from '@/components/ProvinceCard.vue'
+import { provinceList } from '@/utils/provinces.js'
 
 export default {
 	components: {
@@ -25,13 +26,17 @@ export default {
 	data() {
 		return {
 			searchText: '',
-			provinceList: [
-				{ province: '北京', img_src: `${import.meta.env.VITE_IMAGE_URL}` + '/beijing.jpg' },
-				{ province: '上海', img_src: `${import.meta.env.VITE_IMAGE_URL}` + '/shanghai.jpg' },
-				{ province: '江苏', img_src: `${import.meta.env.VITE_IMAGE_URL}` + '/jiangsu.jpg' },
-				{ province: '安徽', img_src: `${import.meta.env.VITE_IMAGE_URL}` + '/anhui.jpg' },
-				// 其他省份数据...
-			]
+			provinceList
+		}
+	},
+	computed: {
+		filteredProvinceList() {
+			if (!this.searchText) {
+				return this.provinceList
+			}
+			return this.provinceList.filter(item => 
+				item.province.includes(this.searchText)
+			)
 		}
 	},
 	methods: {
