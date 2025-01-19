@@ -45,6 +45,12 @@
 						{{ formData.province || '选择省份' }} - {{ formData.city || '选择城市' }}
 					</view>
 				</picker>
+				<input 
+					type="text"
+					v-model="formData.county"
+					placeholder="选填：请输入所在县/区"
+					class="county-input"
+				/>
 			</view>
 
 			<!-- 匿名开关 -->
@@ -248,5 +254,20 @@ export default {
 	text-align: center;
 	color: #666;
 	font-size: 14px;
+}
+
+.county-input {
+	margin-top: 10px;
+	padding: 8px;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	font-size: 14px;
+}
+
+/* 添加 placeholder 样式 */
+.county-input::placeholder {
+	font-family: 'HWMC';  /* 继承父元素字体 */
+	color: #999;  /* 设置与 text-input 相同的颜色 */
+	font-size: 14px;  /* 设置与 text-input 相同的字号 */
 }
 </style>
