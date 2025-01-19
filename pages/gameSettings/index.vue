@@ -2,29 +2,35 @@
   <view class="container">
     <view class="card-list">
       <!-- 随机漫步卡片 -->
-      <view class="card" @tap="navigateToGame('random')" 
-            style="background-image: url('https://img.cdn.dialectmap.site/free.png')">
-        <image class="card-image" src="/static/images/random-walk.png"></image>
+      <view
+        class="card"
+        @tap="navigateToGame('random')"
+        style="background-image: url('https://img.cdn.dialectmap.site/free.png')"
+      >
         <view class="card-content">
           <view class="card-title">随机漫步</view>
           <view class="card-desc">自由探索各地区方言</view>
         </view>
       </view>
-      
+
       <!-- 省份挑战卡片 -->
-      <view class="card" @tap="navigateToGame('province')"
-            style="background-image: url('https://img.cdn.dialectmap.site/province.png')">
-        <image class="card-image" src="/static/images/province.png"></image>
+      <view
+        class="card"
+        @tap="navigateToGame('province')"
+        style="background-image: url('https://img.cdn.dialectmap.site/province.png')"
+      >
         <view class="card-content">
           <view class="card-title">地区挑战</view>
           <view class="card-desc">测试你对特定省份方言的认知</view>
         </view>
       </view>
-      
+
       <!-- 计时游戏卡片 -->
-      <view class="card" @tap="navigateToGame('timer')"
-            style="background-image: url('https://img.cdn.dialectmap.site/timer.png')">
-        <image class="card-image" src="/static/images/timer.png"></image>
+      <view
+        class="card"
+        @tap="navigateToGame('timer')"
+        style="background-image: url('https://img.cdn.dialectmap.site/timer.png')"
+      >
         <view class="card-content">
           <view class="card-title">计时游戏</view>
           <view class="card-desc">限时寻找方言目标位置</view>
@@ -38,21 +44,21 @@
 export default {
   methods: {
     navigateToGame(type) {
-      let url = '';
-      switch(type) {
+      let url = ''
+      switch (type) {
         case 'random':
-          url = '/pages/randomwalk/index';
-          break;
+          url = '/pages/game/index?mode=free'
+          break
         case 'province':
-          url = '/pages/regionchallenge/index';
-          break;
+          url = '/pages/province/index?mode=province'
+          break
         case 'timer':
-          url = '/pages/timergame/index';
-          break;
+          url = '/pages/game/index?mode=timer'
+          break
       }
       uni.navigateTo({
         url
-      });
+      })
     }
   }
 }
@@ -61,7 +67,7 @@ export default {
 <style lang="scss">
 .container {
   padding: 30rpx;
-  background-color: #FFF9E6;
+  background-color: #fff9e6;
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -75,7 +81,7 @@ export default {
 }
 
 .card {
-  background-color: #FFFDF9;
+  background-color: #fffdf9;
   border-radius: 20rpx;
   padding: 40rpx;
   display: flex;
@@ -86,7 +92,7 @@ export default {
   background-size: cover;
   background-position: center;
   position: relative;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -97,11 +103,11 @@ export default {
     background-color: rgba(255, 253, 249, 0.85);
     border-radius: 20rpx;
   }
-  
+
   &:active {
     transform: scale(0.98);
   }
-  
+
   .card-image,
   .card-content {
     position: relative;

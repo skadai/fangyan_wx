@@ -2,11 +2,11 @@ export const provinceList = [
   // 直辖市
   { province: '北京', img_src: `${import.meta.env.VITE_IMAGE_URL}` + '/beijing.jpg' },
   { province: '天津', img_src: `${import.meta.env.VITE_IMAGE_URL}` + '/tianjin.jpg' },
-  { province: '上海', img_src: `${import.meta.env.VITE_IMAGE_URL}` + '/shanghai.jpg' },
+  // { province: '上海', img_src: `${import.meta.env.VITE_IMAGE_URL}` + '/shanghai.jpg' },
   { province: '重庆', img_src: `${import.meta.env.VITE_IMAGE_URL}` + '/chongqing.jpg' },
   
-  // 华东地区
-  { province: '江苏', img_src: `${import.meta.env.VITE_IMAGE_URL}` + '/jiangsu.jpg' },
+  // 华东地区 todo: need more data from jiangsu
+//   { province: '江苏', img_src: `${import.meta.env.VITE_IMAGE_URL}` + '/jiangsu.jpg' },
   { province: '浙江', img_src: `${import.meta.env.VITE_IMAGE_URL}` + '/zhejiang.jpg' },
   { province: '安徽', img_src: `${import.meta.env.VITE_IMAGE_URL}` + '/anhui.jpg' },
   { province: '福建', img_src: `${import.meta.env.VITE_IMAGE_URL}` + '/fujian.jpg' },

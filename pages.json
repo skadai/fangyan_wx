@@ -12,23 +12,17 @@
 				"navigationBarTitleText": "游戏设置"
 			}
 		},
+		{
+			"path": "pages/province/index",
+			"style": {
+				"navigationBarTitleText": "省份选择"
+			}
+		},
 		
 		{
-			"path": "pages/randomwalk/index",
+			"path": "pages/game/index",
 			"style": {
-				"navigationBarTitleText": "随机漫步"
-			}
-		},
-		{
-			"path": "pages/regionchallenge/index",
-			"style": {
-				"navigationBarTitleText": "省份挑战"
-			}
-		},
-		{
-			"path": "pages/timergame/index",
-			"style": {
-				"navigationBarTitleText": "计时游戏"
+				"navigationBarTitleText": "游戏"
 			}
 		},
 		{
