@@ -1,0 +1,11 @@
+{
+    "editor.formatOnSave": true,
+    "vetur.format.defaultFormatter.html": "prettier",
+    "vetur.format.defaultFormatter.js": "prettier",
+    "vetur.format.defaultFormatter.css": "prettier",
+    "[vue]": {
+      "editor.defaultFormatter": "octref.vetur"
+    },
+    "prettier.singleQuote": true,
+    "prettier.semi": false
+  }

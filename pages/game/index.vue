@@ -1,6 +1,24 @@
 <template>
   <view>
     <view class="container">
+      <!-- 移动状态栏到地图区域 -->
+      <view class="map-container">
+        <map
+          class="map"
+          :latitude="latitude"
+          :longitude="longitude"
+          show-location
+          :enable-scroll="true"
+          :scale="6"
+          @tap="onMapTap"
+          :markers="markers"
+        ></map>
+        <!-- 只在省份模式显示状态栏 -->
+        <view v-if="mode === 'province'" class="status-bar">
+          <text>第{{ currentQuestionNumber }}/{{ totalQuestions }}题</text>
+          <text>得分：{{ totalScore }}</text>
+        </view>
+      </view>
       <!-- 播放器部分 -->
       <view class="player-section">
         <view v-if="showTimer" class="timer-display"> 剩余时间：{{ formatRemainingTime() }} </view>
@@ -38,7 +56,7 @@
         <!-- 城市信息卡片和答案展示 -->
         <view class="card info-card">
           <text class="info-text">{{
-            selected.city ? `当前选择的城市是  ${selected.city}` : '请点击地图选择位置'
+            selected.city ? `当前选择的城市是  ${selected.city}` : '请再搜索框输入地名选择位置'
           }}</text>
 
           <!-- 答案区域 -->
@@ -79,19 +97,6 @@
         </view>
       </view>
 
-      <!-- 地图容器 -->
-      <view class="map-container">
-        <map
-          class="map"
-          :latitude="latitude"
-          :longitude="longitude"
-          show-location
-          :enable-scroll="true"
-          :scale="6"
-          @tap="onMapTap"
-        ></map>
-      </view>
-
       <!-- 搜索框部分 -->
       <view class="search-container">
         <input
@@ -115,6 +120,20 @@
         <view class="result-comment">
           {{ result.comment }}
         </view>
+      </view>
+    </view>
+
+    <!-- 添加游戏结束对话框 -->
+    <view v-if="showGameOver" class="game-over-mask">
+      <view class="game-over-content">
+        <view class="close-btn" @tap="closeGameOver">×</view>
+        <view class="game-over-title">游戏结束</view>
+        <view class="game-over-stats">
+          <text>最终得分：{{ totalScore }}</text>
+          <text>答题数量：{{ currentQuestionNumber - 1 }}/{{ totalQuestions }}</text>
+          <text v-if="mode === 'timer'">总耗时：{{ formatTime(120 - remainingTime) }}</text>
+        </view>
+        <button class="restart-btn" @tap="restartGame">重新开始</button>
       </view>
     </view>
   </view>
@@ -167,7 +186,14 @@ export default {
       mode: 'free',
       timer: null,
       remainingTime: 120,
-      showTimer: false
+      showTimer: false,
+      markers: [],
+      currentQuestionNumber: 1,
+      totalQuestions: 10,
+      totalScore: 0,
+      questionScores: [],
+      showGameOver: false,
+      gameStartTime: null
     }
   },
   async onLoad(options) {
@@ -331,14 +357,22 @@ export default {
             source_id: this.question.source_id
           }
         })
-        console.log('submit question', res)
+
         if (res) {
+          // 计算得分
+          const score = this.calculateScore(res.distance)
+          this.questionScores.push(score)
+          this.totalScore = this.questionScores.reduce((a, b) => a + b, 0)
+
           this.result = {
             correct: res.correct,
             distance: res.distance,
-            comment: res.comment
+            comment: res.comment,
+            score: score // 添加本题得分到结果中
           }
           this.showResult = true
+
+          this.currentQuestionNumber++
         }
       } catch (error) {
         console.error('提交答案失败：', error)
@@ -350,6 +384,27 @@ export default {
         this.submitLoading = false
       }
     },
+
+    // 添加计算分数的方法
+    calculateScore(distance) {
+      if (distance < 100) return 100
+      if (distance < 300) return 70
+      if (distance < 500) return 50
+      if (distance < 1000) return 20
+      return 0
+    },
+
+    // 修改重置方法
+    resetGame() {
+      this.currentQuestionNumber = 1
+      this.totalScore = 0
+      this.questionScores = []
+      this.currentQuestionIndex = 0
+      if (this.mode === 'timer') {
+        this.remainingTime = 120
+      }
+    },
+
     async onChangeQuestion() {
       if (this.changeLoading) return
       this.changeLoading = true
@@ -363,17 +418,19 @@ export default {
       }
     },
     onMapTap(e) {
+      console.log('地图被点击', e)
+      const { latitude, longitude } = e.detail
       uni.request({
-        url: `https://apis.map.qq.com/ws/geocoder/v1/?location=${e.detail.latitude},${
-          e.detail.longitude
-        }&key=${import.meta.env.VITE_TENCENT_MAP_KEY}`,
+        url: `https://apis.map.qq.com/ws/geocoder/v1/?location=${latitude},${longitude}&key=${
+          import.meta.env.VITE_TENCENT_MAP_KEY
+        }`,
         success: res => {
           if (res.data.status === 0) {
             this.selected = {
               city:
                 res.data.result.address_component.province + res.data.result.address_component.city,
-              latitude: e.detail.latitude,
-              longitude: e.detail.longitude
+              latitude: latitude,
+              longitude: longitude
             }
           } else {
             console.error('获取地理位置失败：', res.data.message)
@@ -400,11 +457,19 @@ export default {
     async fetchQuestions() {
       let params = {}
       let url = '/questions'
+
+      // 检查游戏是否应该结束
+      if (this.mode === 'province' && this.currentQuestionIndex >= this.questionList.length) {
+        this.handleGameOver()
+        return
+      }
+
       if (this.mode === 'province') {
         params = {
           source_id: this.questionList[this.currentQuestionIndex]
         }
         await this.fetchDetailQuestion(url, params)
+        this.currentQuestionIndex++
       } else {
         await this.fetchDetailQuestion(url, params)
       }
@@ -496,18 +561,43 @@ export default {
             fail: reject
           })
         })
-        console.log('res', res)
 
         if (res.data && res.data.status === 0 && res.data.result) {
           const { location } = res.data.result
           this.latitude = location.lat
           this.longitude = location.lng
+          this.selected = {
+            city:
+              res.data.result.address_components.province + res.data.result.address_components.city,
+            latitude: location.lat,
+            longitude: location.lng
+          }
+          // 更新 markers，只保留当前搜索结果的标记
+          this.markers = [
+            {
+              id: Date.now(),
+              latitude: location.lat,
+              longitude: location.lng,
+              width: 30,
+              height: 30,
+              callout: {
+                content: this.searchAddress,
+                color: '#000000',
+                fontSize: 14,
+                borderRadius: 4,
+                padding: 10,
+                bgColor: '#ffffff',
+                display: 'ALWAYS'
+              }
+            }
+          ]
 
           uni.showToast({
             title: '位置已更新',
             icon: 'success'
           })
         } else {
+          this.markers = [] // 清空 markers
           uni.showToast({
             title: '未找到该地址',
             icon: 'error'
@@ -515,6 +605,7 @@ export default {
         }
       } catch (error) {
         console.error('搜索地址失败:', error)
+        this.markers = [] // 清空 markers
         uni.showToast({
           title: '搜索失败',
           icon: 'error'
@@ -529,13 +620,12 @@ export default {
         clearInterval(this.timer)
       }
       this.remainingTime = 120
+      this.gameStartTime = Date.now()
       this.timer = setInterval(() => {
         if (this.remainingTime > 0) {
           this.remainingTime--
         } else {
-          this.stopTimer()
-          // 时间到，自动提交
-          this.onSubmitQuestion()
+          this.handleGameOver() // 时间到，游戏结束
         }
       }, 1000)
     },
@@ -550,6 +640,26 @@ export default {
       const minutes = Math.floor(this.remainingTime / 60)
       const seconds = this.remainingTime % 60
       return `${minutes}:${seconds.toString().padStart(2, '0')}`
+    },
+    // 处理游戏结束
+    handleGameOver() {
+      this.showGameOver = true
+      this.stopTimer() // 停止计时器
+      // 可以在这里添加其他游戏结束逻辑，比如上传分数等
+    },
+    // 关闭游戏结束对话框
+    closeGameOver() {
+      this.showGameOver = false
+      uni.navigateBack() // 返回上一页
+    },
+    // 重新开始游戏
+    restartGame() {
+      this.resetGame()
+      this.showGameOver = false
+      if (this.mode === 'timer') {
+        this.startTimer()
+      }
+      this.fetchQuestions()
     }
   }
 }
@@ -888,5 +998,90 @@ export default {
   color: #333;
   text-align: center;
   margin: 10rpx 20rpx;
+}
+
+/* 修改状态栏样式 */
+.status-bar {
+  position: absolute;
+  left: 20rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  padding: 20rpx;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  color: red;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
+  z-index: 1;
+}
+
+.status-bar text {
+  white-space: nowrap;
+}
+
+/* 游戏结束对话框样式 */
+.game-over-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.game-over-content {
+  background: white;
+  border-radius: 12rpx;
+  padding: 40rpx;
+  width: 80%;
+  max-width: 600rpx;
+  position: relative;
+}
+
+.game-over-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 30rpx;
+}
+
+.game-over-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  margin-bottom: 30rpx;
+}
+
+.game-over-stats text {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.restart-btn {
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: 20rpx;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+}
+
+.close-btn {
+  position: absolute;
+  top: 10rpx;
+  right: 10rpx;
+  width: 60rpx;
+  height: 60rpx;
+  line-height: 60rpx;
+  text-align: center;
+  font-size: 40rpx;
+  color: #666;
 }
 </style>
