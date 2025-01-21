@@ -56,7 +56,7 @@
         <!-- 城市信息卡片和答案展示 -->
         <view class="card info-card">
           <text class="info-text">{{
-            selected.city ? `当前选择的城市是  ${selected.city}` : '请再搜索框输入地名选择位置'
+            selected.city ? `当前选择的城市是  ${selected.city}` : '请在搜索框输入地名选择位置'
           }}</text>
 
           <!-- 答案区域 -->
@@ -103,7 +103,10 @@
           class="search-input"
           v-model="searchAddress"
           placeholder="输入地址搜索"
+          confirm-type="search"
           @confirm="handleSearch"
+          type="text"
+          style="font-family: 'HWMC', PingFang SC !important"
         />
         <button class="search-btn" size="mini" @tap="handleSearch">搜索</button>
       </view>
@@ -692,27 +695,22 @@ export default {
     },
     // 添加结束游戏方法
     async endGame() {
-      console.log('游戏结束', {
+      const payload = {
         mode: this.mode,
-        totalScore: this.totalScore,
-        questionCount: this.currentQuestionNumber - 1,
-        timeUsed: this.mode === 'timer' ? 120 - this.remainingTime : null,
+        score: this.totalScore,
+        question_count: this.currentQuestionNumber - 1,
+        cost_time: this.mode === 'timer' ? 120 - this.remainingTime : null,
         openid: userStore.openid,
-        nickname: userStore.userInfo?.nickName
-      })
+        nickname: userStore.userInfo?.nickName,
+        detail: this.mode === 'province' ? { province: this.province } : {},
+        avatar_url: userStore.userInfo?.avatarUrl
+      }
+      console.log('payload', payload)
       try {
         await request({
-          url: '/scores',
+          url: '/records',
           method: 'POST',
-          data: {
-            mode: this.mode,
-            score: this.totalScore,
-            questionCount: this.currentQuestionNumber - 1,
-            timeUsed: this.mode === 'timer' ? 120 - this.remainingTime : null,
-            openid: userStore.openid,
-            nickname: userStore.userInfo?.nickName,
-            avatarUrl: userStore.userInfo?.avatarUrl
-          }
+          data: payload
         })
       } catch (error) {
         console.error('上传分数失败:', error)
@@ -1016,7 +1014,7 @@ export default {
   font-size: 28rpx;
   background: #fff;
   border-radius: 4rpx;
-  font-family: 'HWMC', PingFang SC, Microsoft YaHei, sans-serif;
+  font-family: 'HWMC', PingFang SC, Microsoft YaHei, sans-serif !important;
 }
 
 .search-btn {

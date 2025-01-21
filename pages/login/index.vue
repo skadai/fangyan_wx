@@ -17,7 +17,7 @@
         <view class="popup-title">登录提示</view>
         <view class="popup-text">请授权登录后继续使用</view>
         <button class="login-btn" @click="handleLogin" type="primary">
-          微信登录
+          登录
         </button>
         <button class="cancel-btn" @click="closePopup">取消</button>
       </view>

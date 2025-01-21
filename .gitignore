@@ -744,4 +744,5 @@ notebook/
 data/*
 .DS_Store
 unpackage/
+r2-worker/
 

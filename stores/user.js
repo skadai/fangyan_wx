@@ -24,7 +24,7 @@ export const useUserStore = defineStore('user', {
         })
         
         // 3. 保存 openid
-        this.openid = openidRes.openid
+        this.openid = openidRes.data.openid
         
         // 4. 获取用户信息
         const userRes = await uni.getUserInfo({
