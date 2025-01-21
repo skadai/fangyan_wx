@@ -1,44 +1,43 @@
 import { defineStore } from 'pinia'
+import { request } from '@/utils/request'
 
 export const useUserStore = defineStore('user', {
   state: () => ({
+    isLoggedIn: false,
     userInfo: null,
-    isLoggedIn: false
+    openid: null,
   }),
 
   actions: {
     async login() {
       try {
-        // 使用 Promise 方式调用
-        const loginRes = await new Promise((resolve, reject) => {
-          uni.login({
-            provider: 'weixin',
-            success: resolve,
-            fail: reject
-          })
+        // 1. 先获取 code
+        const loginRes = await uni.login()
+        
+        // 2. 用 code 从服务器换取 openid
+        const openidRes = await request({
+          url: '/user/login',
+          method: 'POST',
+          data: {
+            code: loginRes.code
+          }
         })
         
-        console.log('login res', loginRes)
+        // 3. 保存 openid
+        this.openid = openidRes.openid
         
-        const userRes = await new Promise((resolve, reject) => {
-          uni.getUserInfo({
-            provider: 'weixin',
-            success: resolve,
-            fail: reject
-          })
+        // 4. 获取用户信息
+        const userRes = await uni.getUserInfo({
+          provider: 'weixin',
         })
         
-        console.log('user res', userRes)
-        
-        // 更新状态
         this.userInfo = userRes.userInfo
         this.isLoggedIn = true
         
-        return userRes
-        
+        // ... 其他登录逻辑
       } catch (error) {
         console.error('登录失败:', error)
-        throw new Error('登录失败')
+        throw error
       }
     },
     

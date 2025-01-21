@@ -134,7 +134,10 @@
         <view class="game-over-title">游戏结束</view>
         <view class="game-over-stats">
           <text>最终得分：{{ totalScore }}</text>
-          <text>答题数量：{{ currentQuestionNumber - 1 }}/{{ totalQuestions }}</text>
+          <!-- 根据模式显示不同的答题信息 -->
+          <text v-if="mode === 'free'">答题数量：{{ currentQuestionNumber - 1 }}</text>
+          <text v-else>答题数量：{{ currentQuestionNumber - 1 }}/{{ totalQuestions }}</text>
+          <!-- 只在计时模式显示耗时 -->
           <text v-if="mode === 'timer'">总耗时：{{ formatTime(120 - remainingTime) }}</text>
         </view>
         <button class="restart-btn" @tap="restartGame">重新开始</button>
@@ -274,10 +277,14 @@ export default {
 
     // 检查是否登录
     if (!userStore.isLoggedIn) {
+      this.resetAudioContext()
+      this.stopTimer()
       uni.navigateTo({
         url: '/pages/login/index'
       })
       return
+    } else {
+      console.log('用户信息:', userStore)
     }
 
     // 初始化计时器
@@ -689,11 +696,11 @@ export default {
         mode: this.mode,
         totalScore: this.totalScore,
         questionCount: this.currentQuestionNumber - 1,
-        timeUsed: this.mode === 'timer' ? 120 - this.remainingTime : null
+        timeUsed: this.mode === 'timer' ? 120 - this.remainingTime : null,
+        openid: userStore.openid,
+        nickname: userStore.userInfo?.nickName
       })
-
       try {
-        // 这里可以添加上传分数的接口调用
         await request({
           url: '/scores',
           method: 'POST',
@@ -701,14 +708,16 @@ export default {
             mode: this.mode,
             score: this.totalScore,
             questionCount: this.currentQuestionNumber - 1,
-            timeUsed: this.mode === 'timer' ? 120 - this.remainingTime : null
+            timeUsed: this.mode === 'timer' ? 120 - this.remainingTime : null,
+            openid: userStore.openid,
+            nickname: userStore.userInfo?.nickName,
+            avatarUrl: userStore.userInfo?.avatarUrl
           }
         })
       } catch (error) {
         console.error('上传分数失败:', error)
       }
 
-      // 关闭结果显示并触发游戏结束
       this.showResult = false
       this.handleGameOver()
     }

@@ -1,5 +1,5 @@
 const BASE_URL = process.env.NODE_ENV === 'development' 
-  ? 'https://dialectmap.site/api' 
+  ? 'http://localhost:3000/api' 
   : 'https://dialectmap.site/api'  // 这里替换为你的生产环境域名
 
 export const request = (options) => {
