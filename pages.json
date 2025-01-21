@@ -67,16 +67,16 @@
 		"borderStyle": "black",
 		"backgroundColor": "#ffffff",
 		"list": [{
-			"pagePath": "pages/index/index",
-			"iconPath": "static/tabs/home.png",
-			"selectedIconPath": "static/tabs/home-active.png",
-			"text": "首页"
-		}, {
 			"pagePath": "pages/gameSettings/index",
 			"iconPath": "static/tabs/game.png",
 			"selectedIconPath": "static/tabs/game-active.png",
 			"text": "游戏"
-		}, {
+		},{
+			"pagePath": "pages/index/index",
+			"iconPath": "static/tabs/home.png",
+			"selectedIconPath": "static/tabs/home-active.png",
+			"text": "首页"
+		},  {
 			"pagePath": "pages/board/index",
 			"iconPath": "static/tabs/board.png",
 			"selectedIconPath": "static/tabs/board-active.png",
