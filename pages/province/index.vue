@@ -14,6 +14,7 @@
         :key="index"
         :img_src="item.img_src"
         :province="item.province"
+        :location="item.location"
         @cardClick="handleCardClick"
       ></province-card>
     </view>
@@ -44,8 +45,9 @@ export default {
   },
   methods: {
     handleCardClick(e) {
+      console.log('e', e)
       uni.navigateTo({
-        url: `/pages/game/index?mode=province&province=${e.province}`
+        url: `/pages/game/index?mode=province&province=${e.province}&latitude=${e.latitude}&longitude=${e.longitude}`
       })
     }
   }

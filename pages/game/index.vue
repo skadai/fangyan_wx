@@ -9,7 +9,7 @@
           :longitude="longitude"
           show-location
           :enable-scroll="true"
-          :scale="6"
+          :scale="mode === 'province' ? 7 : 6"
           @tap="onMapTap"
           :markers="markers"
         ></map>
@@ -112,13 +112,17 @@
     <!-- 结果遮罩层 -->
     <view v-if="showResult" class="result-mask">
       <view class="result-content">
-        <view class="close-btn" @tap="closeResult">×</view>
         <view class="result-location">
           方言所在：{{ result.correct }} - 你的猜测：{{ selected.city }}
         </view>
         <view class="result-distance"> 偏差 {{ result.distance }}公里 </view>
         <view class="result-comment">
           {{ result.comment }}
+        </view>
+        <!-- 添加按钮组 -->
+        <view class="result-buttons">
+          <button class="result-btn next-btn" @tap="closeResult">下一题</button>
+          <button class="result-btn end-btn" @tap="endGame">结束游戏</button>
         </view>
       </view>
     </view>
@@ -189,7 +193,7 @@ export default {
       showTimer: false,
       markers: [],
       currentQuestionNumber: 1,
-      totalQuestions: 10,
+      totalQuestions: 6,
       totalScore: 0,
       questionScores: [],
       showGameOver: false,
@@ -385,13 +389,23 @@ export default {
       }
     },
 
-    // 添加计算分数的方法
+    // 修改计算分数的方法
     calculateScore(distance) {
-      if (distance < 100) return 100
-      if (distance < 300) return 70
-      if (distance < 500) return 50
-      if (distance < 1000) return 20
-      return 0
+      if (this.mode === 'province') {
+        // 省份模式：更严格的距离要求
+        if (distance < 50) return 100
+        if (distance < 100) return 70
+        if (distance < 200) return 50
+        if (distance < 500) return 20
+        return 0
+      } else {
+        // 其他模式：原有的距离要求
+        if (distance < 100) return 100
+        if (distance < 300) return 70
+        if (distance < 500) return 50
+        if (distance < 1000) return 20
+        return 0
+      }
     },
 
     // 修改重置方法
@@ -459,17 +473,24 @@ export default {
       let url = '/questions'
 
       // 检查游戏是否应该结束
-      if (this.mode === 'province' && this.currentQuestionIndex >= this.questionList.length) {
+      if (
+        this.mode === 'province' &&
+        (this.questionList.length === 0 || this.currentQuestionIndex >= this.totalQuestions)
+      ) {
         this.handleGameOver()
         return
       }
 
       if (this.mode === 'province') {
+        // 随机选择一个索引
+        const randomIndex = Math.floor(Math.random() * this.questionList.length)
+        // 使用 splice 获取并移除选中的 id
+        const randomId = this.questionList.splice(randomIndex, 1)[0]
+
         params = {
-          source_id: this.questionList[this.currentQuestionIndex]
+          source_id: randomId
         }
         await this.fetchDetailQuestion(url, params)
-        this.currentQuestionIndex++
       } else {
         await this.fetchDetailQuestion(url, params)
       }
@@ -612,8 +633,9 @@ export default {
         })
       }
     },
-    closeResult() {
+    async closeResult() {
       this.showResult = false
+      await this.fetchQuestions()
     },
     startTimer() {
       if (this.timer) {
@@ -660,6 +682,35 @@ export default {
         this.startTimer()
       }
       this.fetchQuestions()
+    },
+    // 添加结束游戏方法
+    async endGame() {
+      console.log('游戏结束', {
+        mode: this.mode,
+        totalScore: this.totalScore,
+        questionCount: this.currentQuestionNumber - 1,
+        timeUsed: this.mode === 'timer' ? 120 - this.remainingTime : null
+      })
+
+      try {
+        // 这里可以添加上传分数的接口调用
+        await request({
+          url: '/scores',
+          method: 'POST',
+          data: {
+            mode: this.mode,
+            score: this.totalScore,
+            questionCount: this.currentQuestionNumber - 1,
+            timeUsed: this.mode === 'timer' ? 120 - this.remainingTime : null
+          }
+        })
+      } catch (error) {
+        console.error('上传分数失败:', error)
+      }
+
+      // 关闭结果显示并触发游戏结束
+      this.showResult = false
+      this.handleGameOver()
     }
   }
 }
@@ -1083,5 +1134,37 @@ export default {
   text-align: center;
   font-size: 40rpx;
   color: #666;
+}
+
+.result-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 20rpx;
+  margin-top: 40rpx;
+}
+
+.result-btn {
+  width: 160rpx;
+  height: 60rpx;
+  line-height: 60rpx;
+  border-radius: 30rpx;
+  font-size: 28rpx;
+  border: none;
+  color: white;
+  padding: 0;
+  margin: 0;
+}
+
+.next-btn {
+  background-color: #4caf50;
+}
+
+.end-btn {
+  background-color: #ff5252;
+}
+
+/* 按钮点击效果 */
+.result-btn:active {
+  opacity: 0.8;
 }
 </style>
