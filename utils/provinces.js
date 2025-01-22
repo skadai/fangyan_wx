@@ -8,7 +8,7 @@ export const provinceList = [
   // 华东地区 todo: need more data from jiangsu
 //   { province: '江苏', img_src: `${import.meta.env.VITE_IMAGE_URL}` + '/jiangsu.jpg' },
   { province: '浙江', img_src: `${import.meta.env.VITE_IMAGE_URL}` + '/zhejiang.jpg', location: { lat: 30.2741, lng: 120.1551 } },
-  { province: '安徽', img_src: `${import.meta.env.VITE_IMAGE_URL}` + '/anhui.jpg', location: { lat: 31.8612, lng: 117.2835 } },
+  { province: '安徽', img_src: `${import.meta.env.VITE_IMAGE_URL}` + '/anhui.jpg', location: { lat: 32.5349, lng: 117.1854 } },
   { province: '福建', img_src: `${import.meta.env.VITE_IMAGE_URL}` + '/fujian.jpg', location: { lat: 26.0745, lng: 119.2965 } },
   { province: '江西', img_src: `${import.meta.env.VITE_IMAGE_URL}` + '/jiangxi.jpg', location: { lat: 28.6829, lng: 115.8579 } },
   { province: '山东', img_src: `${import.meta.env.VITE_IMAGE_URL}` + '/shandong.jpg', location: { lat: 36.6512, lng: 117.1201 } },

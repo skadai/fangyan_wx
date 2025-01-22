@@ -1,24 +1,6 @@
 <template>
   <view>
     <view class="container">
-      <!-- 移动状态栏到地图区域 -->
-      <view class="map-container">
-        <map
-          class="map"
-          :latitude="latitude"
-          :longitude="longitude"
-          show-location
-          :enable-scroll="true"
-          :scale="mode === 'province' ? 7 : 6"
-          @tap="onMapTap"
-          :markers="markers"
-        ></map>
-        <!-- 只在省份模式显示状态栏 -->
-        <view v-if="mode === 'province'" class="status-bar">
-          <text>第{{ currentQuestionNumber }}/{{ totalQuestions }}题</text>
-          <text>得分：{{ totalScore }}</text>
-        </view>
-      </view>
       <!-- 播放器部分 -->
       <view class="player-section">
         <view v-if="showTimer" class="timer-display"> 剩余时间：{{ formatRemainingTime() }} </view>
@@ -62,7 +44,7 @@
           <!-- 答案区域 -->
           <view v-if="showAnswer" class="answer-container">
             <scroll-view scroll-y class="answer-text">
-              {{ question.mandarin || '暂无文本' }}
+              <text class="text-content">{{ question.mandarin || '暂无文本' }}</text>
             </scroll-view>
           </view>
         </view>
@@ -94,6 +76,25 @@
           >
             {{ showAnswer ? '隐藏文本' : '查看文本' }}
           </button>
+        </view>
+      </view>
+
+      <!-- 地图部分 -->
+      <view class="map-container">
+        <map
+          class="map"
+          :latitude="latitude"
+          :longitude="longitude"
+          show-location
+          :enable-scroll="true"
+          :scale="mode === 'province' ? 7 : 6"
+          @tap="onMapTap"
+          :markers="markers"
+        ></map>
+        <!-- 只在省份模式显示状态栏 -->
+        <view v-if="mode === 'province'" class="status-bar">
+          <text>第{{ currentQuestionNumber }}/{{ totalQuestions }}题</text>
+          <text>得分：{{ totalScore }}</text>
         </view>
       </view>
 
@@ -152,6 +153,7 @@
 <script>
 import { request } from '@/utils/request'
 import { useUserStore } from '@/stores/user'
+import { provinceList } from '@/utils/province.js' // 导入省份数据
 
 const userStore = useUserStore()
 
@@ -203,7 +205,9 @@ export default {
       totalScore: 0,
       questionScores: [],
       showGameOver: false,
-      gameStartTime: null
+      gameStartTime: null,
+      provinceList, // 直接使用导入的省份数据
+      backgroundImage: ''
     }
   },
   async onLoad(options) {
@@ -212,6 +216,12 @@ export default {
       this.mode = options.mode || this.mode
       if (options.province) {
         this.province = options.province
+        // 查找对应省份的背景图
+        const provinceData = this.provinceList.find(p => p.province === this.province)
+        if (provinceData) {
+          this.backgroundImage = provinceData.img_src // 假设 provinceList 中的图片字段是 image
+          console.log('backgroundImage >>>', this.backgroundImage)
+        }
         await this.fetchQuestionList(this.province)
       }
       if (options.latitude) {
@@ -731,18 +741,17 @@ export default {
 }
 
 .player-section {
+  background-color: #fff;
+  padding: 20rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
+  z-index: 1;
   flex-shrink: 0;
-  /* ... 其他现有样式 ... */
 }
 
 .map-container {
-  position: absolute;
-  top: 0rpx; /* 根据播放器实际高度调整 */
-  left: 0;
-  right: 0;
-  bottom: 0;
+  flex: 1;
+  position: relative;
   width: 100%;
-  z-index: -100;
 }
 
 .map {
@@ -1173,5 +1182,10 @@ export default {
 /* 按钮点击效果 */
 .result-btn:active {
   opacity: 0.8;
+}
+
+.text-content {
+  white-space: pre-wrap; /* 保留换行符和空格 */
+  word-wrap: break-word; /* 允许长单词换行 */
 }
 </style>

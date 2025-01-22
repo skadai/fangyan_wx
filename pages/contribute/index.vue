@@ -172,7 +172,6 @@ export default {
           })
           return
         }
-
         // 生成8位随机字母数字组合
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
         const uuid =
