@@ -2,13 +2,7 @@
   <view>
     <view class="container">
       <!-- 播放器部分 -->
-      <view
-        class="player-section"
-        :class="{ 'with-background': mode === 'province' && backgroundImage }"
-        :style="
-          mode === 'province' && backgroundImage ? `background-image: url(${backgroundImage});` : ''
-        "
-      >
+      <view class="player-section">
         <view v-if="showTimer" class="timer-display"> 剩余时间：{{ formatRemainingTime() }} </view>
         <!-- 播放控制区域 -->
         <view class="player-controls">
@@ -42,16 +36,30 @@
         </view>
 
         <!-- 城市信息卡片和答案展示 -->
-        <view class="card info-card">
-          <text class="info-text">{{
-            selected.city ? `当前选择的城市是  ${selected.city}` : '请在搜索框输入地名选择位置'
-          }}</text>
+        <view
+          class="card info-card"
+          :style="
+            backgroundImage
+              ? {
+                  backgroundImage: `url(${backgroundImage})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat'
+                }
+              : {}
+          "
+        >
+          <view class="card-content">
+            <text class="info-text">{{
+              selected.city ? `当前选择的城市是  ${selected.city}` : '请在搜索框输入地名选择位置'
+            }}</text>
 
-          <!-- 答案区域 -->
-          <view v-if="showAnswer" class="answer-container">
-            <scroll-view scroll-y class="answer-text">
-              <text class="text-content">{{ question.mandarin || '暂无文本' }}</text>
-            </scroll-view>
+            <!-- 答案区域 -->
+            <view v-if="showAnswer" class="answer-container">
+              <scroll-view scroll-y class="answer-text">
+                <text class="text-content">{{ question.mandarin || '暂无文本' }}</text>
+              </scroll-view>
+            </view>
           </view>
         </view>
 
@@ -751,48 +759,6 @@ export default {
   box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
   z-index: 1;
   flex-shrink: 0;
-  position: relative;
-}
-
-.player-section.with-background {
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-/* 添加半透明遮罩层 */
-.player-section.with-background::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 255, 255, 0.85); /* 白色半透明遮罩 */
-  z-index: 0;
-}
-
-/* 确保内容在遮罩层上方 */
-.player-section > * {
-  position: relative;
-  z-index: 1;
-}
-
-/* 确保卡片和按钮有适当的背景色 */
-.card.info-card {
-  background: rgba(255, 255, 255, 0.9);
-}
-
-.button-group .btn {
-  background: rgba(255, 255, 255, 0.9);
-}
-
-/* 调整播放控制区域样式 */
-.player-controls {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 8rpx;
-  padding: 10rpx;
-  margin-bottom: 20rpx;
 }
 
 .map-container {
@@ -859,12 +825,37 @@ export default {
 }
 
 .info-card {
-  text-align: center;
-  padding: 24rpx;
+  position: relative;
+  padding: 0; /* 移除内边距，由 card-content 提供 */
+  overflow: hidden; /* 确保背景图不会溢出圆角 */
+  border-radius: 12rpx;
+}
+
+.card-content {
+  position: relative;
+  z-index: 1;
+  background-color: rgba(255, 255, 255, 0.7); /* 半透明白色背景 */
+  padding: 16rpx 24rpx; /* 恢复内边距 */
 }
 
 .info-text {
+  color: #333;
   font-size: 28rpx;
+}
+
+.answer-container {
+  margin-top: 16rpx;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding-top: 16rpx;
+}
+
+.answer-text {
+  max-height: 240rpx;
+}
+
+.text-content {
+  white-space: pre-wrap;
+  word-wrap: break-word;
   color: #333;
 }
 
@@ -898,19 +889,6 @@ export default {
 
 .eye-btn {
   background-color: #9e9e9e;
-}
-
-.answer-container {
-  margin-top: 16rpx;
-  border-top: 1px solid #eee;
-  padding-top: 16rpx;
-}
-
-.answer-text {
-  max-height: 240rpx;
-  font-size: 28rpx;
-  color: #666;
-  line-height: 1.6;
 }
 
 .eye-btn {
@@ -1187,18 +1165,6 @@ export default {
   font-size: 28rpx;
 }
 
-.close-btn {
-  position: absolute;
-  top: 10rpx;
-  right: 10rpx;
-  width: 60rpx;
-  height: 60rpx;
-  line-height: 60rpx;
-  text-align: center;
-  font-size: 40rpx;
-  color: #666;
-}
-
 .result-buttons {
   display: flex;
   justify-content: space-between;
@@ -1229,10 +1195,5 @@ export default {
 /* 按钮点击效果 */
 .result-btn:active {
   opacity: 0.8;
-}
-
-.text-content {
-  white-space: pre-wrap; /* 保留换行符和空格 */
-  word-wrap: break-word; /* 允许长单词换行 */
 }
 </style>
