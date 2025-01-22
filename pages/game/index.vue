@@ -2,7 +2,13 @@
   <view>
     <view class="container">
       <!-- 播放器部分 -->
-      <view class="player-section">
+      <view
+        class="player-section"
+        :class="{ 'with-background': mode === 'province' && backgroundImage }"
+        :style="
+          mode === 'province' && backgroundImage ? `background-image: url(${backgroundImage});` : ''
+        "
+      >
         <view v-if="showTimer" class="timer-display"> 剩余时间：{{ formatRemainingTime() }} </view>
         <!-- 播放控制区域 -->
         <view class="player-controls">
@@ -153,7 +159,7 @@
 <script>
 import { request } from '@/utils/request'
 import { useUserStore } from '@/stores/user'
-import { provinceList } from '@/utils/province.js' // 导入省份数据
+import { provinceList } from '@/utils/provinces.js' // 导入省份数据
 
 const userStore = useUserStore()
 
@@ -220,7 +226,6 @@ export default {
         const provinceData = this.provinceList.find(p => p.province === this.province)
         if (provinceData) {
           this.backgroundImage = provinceData.img_src // 假设 provinceList 中的图片字段是 image
-          console.log('backgroundImage >>>', this.backgroundImage)
         }
         await this.fetchQuestionList(this.province)
       }
@@ -746,6 +751,48 @@ export default {
   box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
   z-index: 1;
   flex-shrink: 0;
+  position: relative;
+}
+
+.player-section.with-background {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* 添加半透明遮罩层 */
+.player-section.with-background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.85); /* 白色半透明遮罩 */
+  z-index: 0;
+}
+
+/* 确保内容在遮罩层上方 */
+.player-section > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* 确保卡片和按钮有适当的背景色 */
+.card.info-card {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.button-group .btn {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+/* 调整播放控制区域样式 */
+.player-controls {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8rpx;
+  padding: 10rpx;
+  margin-bottom: 20rpx;
 }
 
 .map-container {
