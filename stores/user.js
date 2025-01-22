@@ -25,19 +25,21 @@ export const useUserStore = defineStore('user', {
         
         // 3. 保存 openid
         this.openid = openidRes.data.openid
-        
-        // 4. 获取用户信息
-        const userRes = await uni.getUserInfo({
-          provider: 'weixin',
-        })
-        
-        this.userInfo = userRes.userInfo
         this.isLoggedIn = true
+
         
+      
         // ... 其他登录逻辑
       } catch (error) {
         console.error('登录失败:', error)
         throw error
+      }
+    },
+    
+    updateUserInfo(userInfo) {
+      this.userInfo = {
+        ...this.userInfo,
+        ...userInfo
       }
     },
     

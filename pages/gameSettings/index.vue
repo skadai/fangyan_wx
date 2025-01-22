@@ -20,8 +20,8 @@
         style="background-image: url('https://img.cdn.dialectmap.site/province.png')"
       >
         <view class="card-content">
-          <view class="card-title">地区挑战</view>
-          <view class="card-desc">测试你对特定省份方言的认知</view>
+          <view class="card-title">方域寻踪</view>
+          <view class="card-desc">测试对特定地区方言的熟悉程度</view>
         </view>
       </view>
 
@@ -32,7 +32,7 @@
         style="background-image: url('https://img.cdn.dialectmap.site/timer.png')"
       >
         <view class="card-content">
-          <view class="card-title">计时游戏</view>
+          <view class="card-title">声速之旅</view>
           <view class="card-desc">限时寻找方言目标位置</view>
         </view>
       </view>
