@@ -3,8 +3,20 @@
     <!-- 主页面内容 -->
     <view class="main-content">
       <image class="logo" src="/static/logo.png" mode="aspectFit" />
-      <view class="title">方言地图</view>
+      <view class="title">寻迹乡音</view>
       <view class="subtitle">探索中国方言的独特魅力</view>
+
+      <!-- 添加歌谣背景 -->
+      <view class="folk-songs-container">
+        <view
+          v-for="(song, index) in folkSongs"
+          :key="index"
+          class="folk-song-item"
+          :style="song.style"
+        >
+          {{ song.text }}
+        </view>
+      </view>
     </view>
 
     <!-- 登录弹窗 -->
@@ -21,7 +33,7 @@
             class="avatar-preview"
             mode="aspectFill"
           ></image>
-          <text v-else>点击选择头像</text>
+          <text v-else>选择头像</text>
         </button>
 
         <!-- 昵称输入框 -->
@@ -53,13 +65,15 @@ export default {
       popup: null,
       userStore: null,
       tempAvatar: '', // 临时存储选择的头像
-      tempNickname: '' // 临时存储输入的昵称
+      tempNickname: '', // 临时存储输入的昵称
+      folkSongs: []
     }
   },
 
   mounted() {
     this.userStore = useUserStore()
     this.showLoginPopup()
+    this.initFolkSongs()
   },
 
   methods: {
@@ -148,6 +162,29 @@ export default {
 
     closePopup() {
       this.$refs.popup.close()
+    },
+
+    initFolkSongs() {
+      const songs = [
+        '拍大腿，唱山歌，人人说我没老婆。有钱找个娇娇女，没钱找个麻脸婆。麻脸婆，吃又吃得多，拉屎拉成箩，撒尿冲大海，放屁能打陀螺。',
+        '天黄黄，地黄黄，我家有个哭夜郎。过路君子念三遍，一觉睡到大天光。',
+        '阿里山的姑娘美如水呀，阿里山的少年壮如山。',
+        '鸡叫了，天明了。老头起来喂牛了。大牛吃，小牛看。气得老头不吃饭。',
+        '胖子很胖，打麻将。欠了钱，不还帐。',
+        '要一代没一代，脑袋像个磕烟袋；要一壶没一壶，脑袋像个酱油壶',
+        '远处的哈巴尔山口哎，你是多么的陡峭啊！哎，我的千里马'
+      ]
+
+      this.folkSongs = songs.map(text => ({
+        text,
+        style: {
+          left: Math.random() * 50 + 'vw', // 随机水平位置
+          top: Math.random() * 30 + 'vh', // 随机垂直位置，限制在屏幕高度的 40% 以内
+          transform: `rotate(45deg)`, // 统一 45 度旋转
+          opacity: 0.1 + Math.random() * 0.3, // 随机透明度
+          fontSize: 20 + Math.random() * 30 + 'rpx' // 随机字体大小，范围20-50rpx
+        }
+      }))
     }
   }
 }
@@ -166,11 +203,13 @@ export default {
 
 .main-content {
   text-align: center;
+  position: relative;
+  z-index: 1;
 }
 
 .logo {
-  width: 200rpx;
-  height: 200rpx;
+  width: 400rpx;
+  height: 400rpx;
   margin-bottom: 40rpx;
 }
 
@@ -249,5 +288,36 @@ export default {
 .cancel-btn {
   color: #666;
   background-color: #f5f5f5;
+}
+
+.folk-songs-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.folk-song-item {
+  position: absolute;
+  font-size: 24rpx;
+  color: #666;
+  white-space: nowrap;
+  animation: floating 20s linear infinite;
+}
+
+@keyframes floating {
+  0% {
+    transform: translateY(0) rotate(var(--rotation));
+  }
+  50% {
+    transform: translateY(-20rpx) rotate(var(--rotation));
+  }
+  100% {
+    transform: translateY(0) rotate(var(--rotation));
+  }
 }
 </style> 

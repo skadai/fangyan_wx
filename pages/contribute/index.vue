@@ -218,7 +218,7 @@ export default {
           method: 'POST',
           data: submitData
         })
-
+        console.log('response >>>', response)
         if (response.statusCode === 200) {
           uni.showToast({
             title: '提交成功',
@@ -226,8 +226,6 @@ export default {
           })
           // 重置表单
           this.resetForm()
-        } else {
-          throw new Error('提交失败')
         }
       } catch (error) {
         uni.showToast({
