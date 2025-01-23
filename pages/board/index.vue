@@ -111,7 +111,8 @@ export default {
           method: 'GET',
           data: {
             mode,
-            ...extraParams
+            ...extraParams,
+            num: 10
           }
         })
 
