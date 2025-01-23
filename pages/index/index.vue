@@ -72,20 +72,20 @@ export default {
     // 获取当前路由
     this.currentRoute = this.$route?.path || ''
 
-    // 获取用户位置
-    uni.getLocation({
-      type: 'gcj02',
-      success: res => {
-        this.latitude = res.latitude
-        this.longitude = res.longitude
-        this.markers[0].latitude = res.latitude
-        this.markers[0].longitude = res.longitude
-      }
-    })
+    // // 获取用户位置
+    // uni.getLocation({
+    //   type: 'gcj02',
+    //   success: res => {
+    //     this.latitude = res.latitude
+    //     this.longitude = res.longitude
+    //     this.markers[0].latitude = res.latitude
+    //     this.markers[0].longitude = res.longitude
+    //   }
+    // })
     await this.handleSearch()
   },
   onUnload() {
-    this.resetAudioContext()
+    this.destroyAudioContext()
   },
   methods: {
     destroyAudioContext() {
@@ -130,7 +130,6 @@ export default {
         this.currentPlayingSrc = ''
       })
     },
-
     handleAudioPlay(src) {
       if (!this.audioContext) {
         console.log('音频实例不存在')
