@@ -101,6 +101,9 @@
           :longitude="longitude"
           show-location
           :enable-scroll="true"
+          :enable-zoom="true"
+          :enable-rotate="false"
+          style="pointer-events: auto"
           :scale="mode === 'province' ? 7 : 6"
           @tap="onMapTap"
           :markers="markers"
@@ -245,65 +248,11 @@ export default {
       }
     }
 
-    this.resetAudioContext()
-
-    this.innerAudioContext = uni.createInnerAudioContext({ useWebAudioImplement: false })
-    this.innerAudioContext.autoplay = true
-
-    this.innerAudioContext.onPlay(() => {
-      console.log('音频播放事件触发', innerAudioContext.paused)
-      this.isPlaying = true
-    })
-
-    this.innerAudioContext.onPause(() => {
-      console.log('音频暂停事件触发')
-      this.isPlaying = false
-    })
-
-    this.innerAudioContext.onStop(() => {
-      console.log('音频停止事件触发')
-      this.isPlaying = false
-    })
-
-    this.innerAudioContext.onEnded(() => {
-      console.log('音频自然播放结束事件触发')
-      this.isPlaying = false
-    })
-
-    this.innerAudioContext.onError(res => {
-      console.error('播放错误：', res.errMsg, res.errCode)
-      uni.showToast({
-        title: '音频加载失败',
-        icon: 'none'
-      })
-      this.isPlaying = false
-      this.innerAudioContext.destroy()
-    })
-
-    this.innerAudioContext.onCanplay(() => {
-      this.duration = this.innerAudioContext.duration
-      this.audioLoading = false
-    })
-
-    this.innerAudioContext.onWaiting(() => {
-      this.audioLoading = true
-      console.log('音频加载中')
-    })
-
-    // 监听播放进度
-    this.innerAudioContext.onTimeUpdate(() => {
-      if (!this.isSliding) {
-        this.currentTime = this.innerAudioContext.currentTime || 0
-        this.duration = this.innerAudioContext.duration || 0
-        this.progress = (this.currentTime / this.duration) * 100
-      }
-    })
-
     this.fetchQuestions()
 
     // 检查是否登录
     if (!userStore.isLoggedIn) {
-      this.resetAudioContext()
+      this.destroyAudioContext()
       this.stopTimer()
       uni.navigateTo({
         url: '/pages/login/index'
@@ -321,53 +270,86 @@ export default {
   },
   onUnload() {
     // TODO
-    this.resetAudioContext()
+    this.destroyAudioContext()
     this.stopTimer()
   },
 
   methods: {
-    resetAudioContext() {
-      if (this.innerAudioContext) {
-        try {
-          this.innerAudioContext.pause()
-          this.innerAudioContext.destroy()
-          this.innerAudioContext = null
-          console.log('reset audio context...')
-        } catch (e) {
-          //TODO handle the exception
-          console.log('reset error', e)
-        }
-      }
-    },
+    // 新增方法统一初始化音频
+    setupAudioListeners() {
+      this.innerAudioContext = uni.createInnerAudioContext({ useWebAudioImplement: true })
 
+      this.innerAudioContext.onPlay(() => {
+        console.log('音频播放事件触发', this.innerAudioContext.paused)
+        this.isPlaying = true
+      })
+
+      this.innerAudioContext.onPause(() => {
+        console.log('音频暂停事件触发')
+        this.isPlaying = false
+      })
+
+      this.innerAudioContext.onStop(() => {
+        console.log('音频停止事件触发')
+        this.isPlaying = false
+      })
+
+      this.innerAudioContext.onEnded(() => {
+        console.log('音频自然播放结束事件触发')
+        this.isPlaying = false
+      })
+
+      this.innerAudioContext.onError(res => {
+        console.error('播放错误：', res.errMsg, res.errCode)
+        uni.showToast({
+          title: '音频加载失败',
+          icon: 'none'
+        })
+        this.isPlaying = false
+        this.innerAudioContext.destroy()
+      })
+
+      this.innerAudioContext.onCanplay(() => {
+        this.duration = this.innerAudioContext.duration
+        this.audioLoading = false
+      })
+
+      this.innerAudioContext.onWaiting(() => {
+        this.audioLoading = true
+        console.log('音频加载中')
+      })
+
+      // 监听播放进度
+      this.innerAudioContext.onTimeUpdate(() => {
+        if (!this.isSliding) {
+          this.currentTime = this.innerAudioContext.currentTime || 0
+          this.duration = this.innerAudioContext.duration || 0
+          this.progress = (this.currentTime / this.duration) * 100
+        }
+      })
+    },
     destroyAudioContext() {
       if (this.innerAudioContext) {
         try {
-          this.innerAudioContext.pause()
+          this.innerAudioContext.stop()
           this.innerAudioContext.destroy()
-          this.innerAudioContext = null
         } catch (e) {
-          console.error('销毁音频实例失败：', e)
+          console.log('销毁异常:', e)
         }
+        this.innerAudioContext = null
       }
     },
 
     togglePlay() {
-      if (!this.innerAudioContext) {
-        console.log('音频实例不存在')
-        return
-      }
+      if (!this.innerAudioContext) return
 
-      if (!this.innerAudioContext.paused) {
-        console.log('开始暂停...')
+      // 确保由用户手势触发
+      if (this.innerAudioContext.paused) {
+        this.innerAudioContext.play()
+        this.isPlaying = true
+      } else {
         this.innerAudioContext.pause()
         this.isPlaying = false
-        console.log('暂停后状态检查', this.innerAudioContext.paused)
-      } else {
-        console.log('开始播放...')
-        this.isPlaying = true
-        const playResult = this.innerAudioContext.play()
-        console.log('播放结果', playResult)
       }
     },
 
@@ -530,6 +512,8 @@ export default {
     },
 
     async fetchDetailQuestion(url, params) {
+      this.destroyAudioContext()
+      this.setupAudioListeners()
       try {
         const res = await request({
           url,
@@ -543,6 +527,11 @@ export default {
           this.showAnswer = true
           if (this.innerAudioContext) {
             this.innerAudioContext.src = this.currentSong.src
+            // iOS需要用户交互后播放
+            if (uni.getSystemInfoSync().platform === 'ios') {
+              await this.innerAudioContext.play()
+              this.innerAudioContext.pause()
+            }
           }
           this.showResult = false
           this.selected = {
@@ -760,11 +749,15 @@ export default {
   z-index: 1;
   flex-shrink: 0;
 }
-
+/* 
 .map-container {
   flex: 1;
   position: relative;
   width: 100%;
+} */
+.map-container {
+  height: 60vh; /* 明确高度 */
+  flex: none;
 }
 
 .map {
@@ -773,11 +766,9 @@ export default {
 }
 
 .search-container {
-  position: absolute;
-  bottom: 40rpx;
-  left: 20rpx;
-  right: 20rpx;
-  /* ... 其他现有样式 ... */
+  position: relative; /* 改为相对定位 */
+  margin: 20rpx;
+  bottom: auto;
 }
 
 .player-controls {
