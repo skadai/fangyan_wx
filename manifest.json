@@ -60,13 +60,9 @@
         "permission" : {
             "scope.userLocation" : {
                 "desc" : "你的位置信息将用于小程序游戏关卡设计"
-            },
-            "scope.userInfo" : {
-                "desc" : "你的用户信息将用于记录游戏进度"
             }
         },
-        "requiredPrivateInfos" : [ "chooseLocation" ],
-        "shareTimeline" : true
+        "requiredPrivateInfos" : [ "chooseLocation" ]
     },
     "mp-alipay" : {
         "usingComponents" : true
