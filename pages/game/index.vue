@@ -50,10 +50,6 @@
           "
         >
           <view class="card-content">
-            <text class="info-text">{{
-              selected.city ? `当前选择的城市是  ${selected.city}` : '请在搜索框输入地名选择位置'
-            }}</text>
-
             <!-- 答案区域 -->
             <view v-if="showAnswer" class="answer-container">
               <scroll-view scroll-y class="answer-text">
@@ -96,6 +92,7 @@
       <!-- 地图部分 -->
       <view class="map-container">
         <map
+          id="myMap"
           class="map"
           :latitude="latitude"
           :longitude="longitude"
@@ -105,7 +102,7 @@
           :enable-rotate="false"
           style="pointer-events: auto"
           :scale="mode === 'province' ? 7 : 6"
-          @tap="onMapTap"
+          @regionchange="onRegionChange"
           :markers="markers"
         ></map>
         <!-- 只在省份模式显示状态栏 -->
@@ -128,6 +125,10 @@
         />
         <button class="search-btn" size="mini" @tap="handleSearch">搜索</button>
       </view>
+    </view>
+    <view class="center-pin">
+      <image src="/static/logo.png" class="pin-img" />
+      <text class="pin-text">{{ selected.city || '请选择位置' }}</text>
     </view>
 
     <!-- 结果遮罩层 -->
@@ -187,6 +188,10 @@ export default {
         latitude: null,
         longitude: null
       },
+      mapCenter: {
+        lat: 39.909,
+        lng: 116.397
+      },
       currentSong: {
         src: 'https://pub-5933d092e74a4a95b1e16491c14ffe3f.r2.dev/15F39sp13kt0003',
         title: '未知',
@@ -228,6 +233,8 @@ export default {
     }
   },
   async onLoad(options) {
+    this.mapCtx = uni.createMapContext('myMap', this)
+    console.log('init map ctx')
     // 读取参数
     if (options) {
       this.mode = options.mode || this.mode
@@ -242,9 +249,11 @@ export default {
       }
       if (options.latitude) {
         this.latitude = Number(options.latitude)
+        this.mapCenter.lat = this.latitude
       }
       if (options.longitude) {
         this.longitude = Number(options.longitude)
+        this.mapCenter.lng = this.longitude
       }
     }
 
@@ -276,6 +285,26 @@ export default {
 
   methods: {
     // 新增方法统一初始化音频
+    onRegionChange(e) {
+      // e.type = "begin" | "end"
+      // 只有在手势结束时再去获取地图中心坐标，避免拖拽或缩放中频繁调用
+      if (e.type === 'end') {
+        console.log('regionchange', e)
+
+        // 调用 getCenterLocation
+        this.mapCtx.getCenterLocation({
+          success: res => {
+            // 更新 data 中的 mapCenter
+            this.mapCenter.lat = res.latitude
+            this.mapCenter.lng = res.longitude
+            this.getCity(this.mapCenter.lat, this.mapCenter.lng)
+          },
+          fail: err => {
+            console.log('获取中心点坐标失败:', err)
+          }
+        })
+      }
+    },
     setupAudioListeners() {
       this.innerAudioContext = uni.createInnerAudioContext({ useWebAudioImplement: true })
 
@@ -357,8 +386,11 @@ export default {
       if (this.submitLoading) return
       this.submitLoading = true
 
+      this.selected.latitude = this.mapCenter.lat
+      this.selected.longitude = this.mapCenter.lng
+
       // 如果没有选择位置或没有题目，则提示用户
-      if (!this.latitude || !this.longitude || !this.question.source_id) {
+      if (!this.selected.latitude || !this.selected.longitude || !this.question.source_id) {
         uni.showToast({
           title: '请先在地图上选择位置',
           icon: 'none'
@@ -446,9 +478,7 @@ export default {
         this.changeLoading = false
       }
     },
-    onMapTap(e) {
-      console.log('地图被点击', e)
-      const { latitude, longitude } = e.detail
+    getCity(latitude, longitude) {
       uni.request({
         url: `https://apis.map.qq.com/ws/geocoder/v1/?location=${latitude},${longitude}&key=${
           import.meta.env.VITE_TENCENT_MAP_KEY
@@ -461,6 +491,7 @@ export default {
               latitude: latitude,
               longitude: longitude
             }
+            console.log('selected', res.data.result.address_component)
           } else {
             console.error('获取地理位置失败：', res.data.message)
           }
@@ -528,7 +559,8 @@ export default {
           if (this.innerAudioContext) {
             this.innerAudioContext.src = this.currentSong.src
             // iOS需要用户交互后播放
-            if (uni.getSystemInfoSync().platform === 'ios') {
+            const { platform } = uni.getAppBaseInfo()
+            if (platform === 'ios') {
               await this.innerAudioContext.play()
               this.innerAudioContext.pause()
             }
@@ -738,26 +770,28 @@ export default {
 <style>
 .container {
   height: 100vh;
-  display: flex;
-  flex-direction: column;
+  position: relative; /* 添加相对定位 */
 }
 
 .player-section {
-  background-color: #fff;
+  position: absolute; /* 改为绝对定位 */
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(255, 255, 255, 0.95); /* 添加半透明背景 */
   padding: 20rpx;
   box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
-  z-index: 1;
-  flex-shrink: 0;
+  z-index: 100; /* 确保在地图上层 */
 }
-/* 
+
 .map-container {
-  flex: 1;
-  position: relative;
-  width: 100%;
-} */
-.map-container {
-  height: 60vh; /* 明确高度 */
-  flex: none;
+  position: absolute; /* 改为绝对定位 */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100vh; /* 填满整个视口高度 */
+  z-index: 10;
 }
 
 .map {
@@ -829,11 +863,6 @@ export default {
   padding: 16rpx 24rpx; /* 恢复内边距 */
 }
 
-.info-text {
-  color: #333;
-  font-size: 28rpx;
-}
-
 .answer-container {
   margin-top: 16rpx;
   border-top: 1px solid rgba(0, 0, 0, 0.1);
@@ -868,6 +897,33 @@ export default {
   padding: 0;
   margin: 0;
   color: white;
+}
+
+.center-pin {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 999;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pin-img {
+  width: 100rpx;
+  height: 100rpx;
+}
+
+.pin-text {
+  margin-top: 10rpx;
+  padding: 8rpx 16rpx;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  color: #333;
+  text-align: center;
 }
 
 .submit-btn {
