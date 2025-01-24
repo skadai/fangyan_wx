@@ -62,6 +62,7 @@
                 "desc" : "你的位置信息将用于小程序游戏关卡设计"
             }
         },
+        "enableShareTimeline": true,
         "requiredPrivateInfos" : [ "chooseLocation" ]
     },
     "mp-alipay" : {

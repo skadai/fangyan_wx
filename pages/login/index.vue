@@ -65,7 +65,7 @@ export default {
       popup: null,
       userStore: null,
       tempAvatar: '', // 临时存储选择的头像
-      tempNickname: '', // 临时存储输入的昵称
+      tempNickname: '大聪明', // 临时存储输入的昵称
       folkSongs: []
     }
   },

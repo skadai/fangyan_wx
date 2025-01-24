@@ -162,7 +162,15 @@
           <!-- 只在计时模式显示耗时 -->
           <text v-if="mode === 'timer'">总耗时：{{ formatTime(120 - remainingTime) }}</text>
         </view>
-        <button class="restart-btn" @tap="restartGame">重新开始</button>
+        <view class="game-over-buttons">
+          <button class="restart-btn" @tap="restartGame">重新开始</button>
+          <button class="share-btn" open-type="share">分享给好友</button>
+        </view>
+        <view class="timeline-wrapper">
+          <button class="timeline-btn" @tap="showShareTip">
+            <text>分享到朋友圈</text>
+          </button>
+        </view>
       </view>
     </view>
   </view>
@@ -749,7 +757,7 @@ export default {
         detail: this.mode === 'province' ? { province: this.province } : {},
         avatar_url: userStore.userInfo?.avatarUrl
       }
-      console.log('payload', payload)
+
       try {
         await request({
           url: '/records',
@@ -762,6 +770,43 @@ export default {
 
       this.showResult = false
       this.handleGameOver()
+    },
+
+    // 分享给好友
+    onShareAppMessage() {
+      const shareTitle =
+        this.mode === 'province'
+          ? `我在${this.province}方言挑战中获得了${this.totalScore}分！`
+          : `我在方言挑战中获得了${this.totalScore}分！`
+
+      return {
+        title: shareTitle,
+        path: '/pages/game/index', // 分享后进入的页面
+        imageUrl: this.mode === 'province' ? this.backgroundImage : '/static/logo.png' // 分享的图片，建议尺寸 5:4
+      }
+    },
+
+    // 分享到朋友圈
+    onShareTimeline() {
+      const shareTitle =
+        this.mode === 'province'
+          ? `我在${this.province}方言挑战中获得了${this.totalScore}分！`
+          : `我在方言挑战中获得了${this.totalScore}分！`
+
+      return {
+        title: shareTitle,
+        query: '/pages/game/index', // 可以添加参数
+        imageUrl: this.mode === 'province' ? this.backgroundImage : '/static/logo.png'
+      }
+    },
+
+    showShareTip() {
+      uni.showModal({
+        title: '分享到朋友圈',
+        content: '点击右上角「...」，选择「分享到朋友圈」即可分享您的游戏成绩',
+        showCancel: false,
+        confirmText: '我知道了'
+      })
     }
   }
 }
@@ -1203,13 +1248,59 @@ export default {
   color: #333;
 }
 
+.game-over-buttons {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 30rpx;
+  margin-bottom: 20rpx;
+}
+
+.restart-btn,
+.share-btn {
+  flex: 1;
+  height: 80rpx;
+  line-height: 80rpx;
+  text-align: center;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  color: white;
+}
+
 .restart-btn {
   background: #4caf50;
-  color: white;
-  border: none;
-  padding: 20rpx;
-  border-radius: 8rpx;
+}
+
+.share-btn {
+  background: #2196f3;
+}
+
+.timeline-wrapper {
+  margin-top: 20rpx;
+  padding: 0 20rpx;
+}
+
+.timeline-btn {
+  width: 100%;
+  height: 80rpx;
+  line-height: 80rpx;
+  text-align: center;
+  border-radius: 40rpx;
   font-size: 28rpx;
+  color: white;
+  background: #ff9800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timeline-icon {
+  margin-right: 10rpx;
+  font-size: 32rpx;
+}
+
+.share-btn::after,
+.timeline-btn::after {
+  border: none;
 }
 
 .result-buttons {

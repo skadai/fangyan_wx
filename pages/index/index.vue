@@ -91,12 +91,12 @@ export default {
     destroyAudioContext() {
       if (this.audioContext) {
         try {
-          this.audioContext.pause()
+          this.audioContext.stop()
           this.audioContext.destroy()
-          this.audioContext = null
         } catch (e) {
           console.error('销毁音频实例失败：', e)
         }
+        this.audioContext = null
       }
     },
     initAudioContext() {
@@ -138,9 +138,9 @@ export default {
 
       if (this.currentPlayingSrc === src) {
         // 暂停当前播放
-        if (!this.audioContext.paused) {
+        if (this.audioContext && !this.audioContext.paused) {
           console.log('开始暂停...')
-          this.audioContext.pause()
+          this.audioContext.stop()
           this.currentPlayingSrc = ''
           console.log('暂停后状态检查', this.audioContext.paused)
         }
