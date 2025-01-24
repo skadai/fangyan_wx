@@ -35,10 +35,10 @@
       </view>
 
       <!-- 匿名开关 -->
-      <view class="anonymous-section">
+      <!-- <view class="anonymous-section">
         <text>是否匿名发布</text>
         <switch :checked="formData.isAnonymous" @change="handleAnonymousChange" />
-      </view>
+      </view> -->
 
       <!-- 提交按钮 -->
       <button class="submit-btn" @tap="handleSubmit">提交贡献</button>
