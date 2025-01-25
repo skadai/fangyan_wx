@@ -12,6 +12,20 @@
         </view>
       </view>
 
+      <!-- 用户游戏记录显示 -->
+      <view v-if="currentUserRecord" class="user-record">
+        <view class="record-text">
+          <!-- 你玩了 {{ currentUserRecord.play_count }} 次 -->
+          <view class="title-container">
+            <text class="title">{{ getUserTitle(currentUserRecord).title }}</text>
+            <text class="description">{{ getUserTitle(currentUserRecord).description }}</text>
+          </view>
+        </view>
+        <view class="record-text"
+          >最佳排名 {{ currentUserRecord.rank }}/{{ currentUserRecord.total }}</view
+        >
+      </view>
+
       <!-- 省份选择器 -->
       <view v-if="currentTab === 1" class="province-selector">
         <picker @change="onProvinceChange" :value="provinceIndex" :range="provinces">
@@ -52,6 +66,8 @@
 
 <script>
 import { request } from '@/utils/request.js'
+import { useUserStore } from '@/stores/user'
+import levels from '@/utils/level.js'
 
 export default {
   data() {
@@ -61,13 +77,23 @@ export default {
       currentTab: 0,
       provinces: ['全部'],
       provinceIndex: 0,
-      rankData: []
+      rankData: [],
+      userRecords: [], // 存储用户游戏记录
+      currentUserRecord: null, // 当前显示的游戏记录
+      levels: [] // 添加这行
     }
   },
-  computed: {},
+  computed: {
+    shareTitle() {
+      return this.currentUserRecord
+        ? `我获得了 「${this.getUserTitle(this.currentUserRecord).title}」称号，敢来挑战一下吗？`
+        : '快来挑战方言小游戏吧！'
+    }
+  },
   methods: {
     async handleTabChange(index) {
       this.currentTab = index
+      this.updateCurrentUserRecord()
       await this.fetchRecords(this.tabKeys[index])
     },
     async onProvinceChange(e) {
@@ -125,12 +151,87 @@ export default {
           icon: 'none'
         })
       }
+    },
+    getUserTitle(record) {
+      if (!record) return { title: '暂无称号', description: '' }
+
+      const { rank, total, play_count } = record
+
+      // 如果总人数小于100，直接根据排名分配
+      if (total < 100) {
+        if (rank === 1) return this.levels[7]
+        if (rank <= 3) return this.levels[6]
+        if (rank <= 5) return this.levels[5]
+        if (rank <= 10) return this.levels[4]
+        if (rank <= 20) return this.levels[3]
+        if (rank <= 30) return this.levels[2]
+        return this.levels[1]
+      }
+
+      // 如果总人数大于100，根据百分比分配
+      const percentage = (rank / total) * 100
+
+      if (percentage <= 1) return this.levels[7]
+      if (percentage <= 5) return this.levels[6]
+      if (percentage <= 10) return this.levels[5]
+      if (percentage <= 20) return this.levels[4]
+      if (percentage <= 30) return this.levels[3]
+      if (percentage <= 50) return this.levels[2]
+      return this.levels[1]
+    },
+    async fetchUserRecords() {
+      try {
+        const userStore = useUserStore()
+        const response = await request({
+          url: '/records/user',
+          method: 'GET',
+          data: {
+            openid: userStore.openid
+          }
+        })
+        this.userRecords = response.data
+        this.updateCurrentUserRecord()
+      } catch (error) {
+        console.error('获取用户游戏记录失败：', error)
+      }
+    },
+    updateCurrentUserRecord() {
+      const currentMode = this.tabKeys[this.currentTab]
+      this.currentUserRecord = this.userRecords.find(record => record.game_mode === currentMode)
+    },
+
+    // 添加显示分享提示的方法
+    showShareTip() {
+      uni.showModal({
+        title: '分享到朋友圈',
+        content: '点击右上角「...」，选择「分享到朋友圈」即可分享您的称号',
+        showCancel: false,
+        confirmText: '我知道了'
+      })
     }
   },
   async onLoad() {
+    this.levels = levels
+    await this.fetchUserRecords()
     await this.fetchProvinces()
-    // 获取完省份列表后，再获取排行榜数据
     await this.fetchRecords(this.tabKeys[this.currentTab])
+  },
+  // 分享到微信好友
+  onShareAppMessage(res) {
+    return {
+      title: this.shareTitle,
+      path: '/pages/board/index',
+      imageUrl: '/static/logo.png'
+    }
+  },
+
+  // 分享到朋友圈
+  onShareTimeline() {
+    return {
+      title: this.shareTitle,
+      query: '',
+      imageUrl: '/static/logo.png'
+    }
   }
 }
 </script>
@@ -239,5 +340,34 @@ export default {
   height: 60rpx;
   border-radius: 50%;
   object-fit: cover;
+}
+
+.user-record {
+  margin: 20rpx 0;
+  padding: 20rpx;
+  border-radius: 8rpx;
+
+  .record-text {
+    font-size: 28rpx;
+    color: #333;
+    line-height: 1.5;
+  }
+
+  .title-container {
+    margin-top: 10rpx;
+
+    .title {
+      font-size: 36rpx;
+      font-weight: bold;
+      color: #007aff;
+      margin-right: 20rpx;
+    }
+
+    .description {
+      font-size: 24rpx;
+      color: #666;
+      font-style: italic;
+    }
+  }
 }
 </style>
