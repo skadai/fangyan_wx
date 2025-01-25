@@ -212,20 +212,15 @@ export default {
         }
 
         // 提交贡献数据
-        const response = await request({
+        await request({
           url: '/contribute',
           method: 'POST',
           data: submitData
         })
-        console.log('response >>>', response)
-        if (response.statusCode === 200) {
-          uni.showToast({
-            title: '提交成功',
-            icon: 'success'
-          })
-          // 重置表单
-          this.resetForm()
-        }
+        uni.showToast({
+          title: '提交成功',
+          icon: 'none'
+        })
       } catch (error) {
         uni.showToast({
           title: '提交失败，请重试',
