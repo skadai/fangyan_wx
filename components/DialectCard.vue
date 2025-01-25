@@ -1,17 +1,17 @@
 <template>
   <view class="dialect-card">
     <view class="card-content">
-      <text class="text-content" :class="{ 'text-collapsed': !isExpanded }">{{text}}</text>
+      <text class="text-content" :class="{ 'text-collapsed': !isExpanded }">{{ text }}</text>
       <view v-if="needExpand" class="expand-btn" @tap="toggleExpand">
         <text class="expand-text">{{ isExpanded ? '收起' : '展开' }}</text>
       </view>
     </view>
     <view class="card-footer">
-      <text class="location">{{province}} · {{city}}</text>
-      <text class="author">{{author}}</text>
-      <button class="play-btn" :class="{ 'playing': isPlaying }" @tap="handlePlay">
-        <text class="iconfont">{{isPlaying ? '播放中' : '播放'}}</text>
-      </button>
+      <text class="location">{{ province }} · {{ city }} · {{ country }}</text>
+      <text class="author">{{ author }}</text>
+      <!-- <button class="play-btn" :class="{ playing: isPlaying }" @tap="handlePlay">
+        <text class="iconfont">{{ isPlaying ? '播放中' : '播放' }}</text>
+      </button> -->
     </view>
   </view>
 </template>
@@ -36,6 +36,11 @@ export default {
       type: String,
       required: true
     },
+    country: {
+      type: String,
+      required: false,
+      default: '未知县区'
+    },
     author: {
       type: String,
       required: true
@@ -59,30 +64,29 @@ export default {
   computed: {
     needExpand() {
       // 通过 DOM 获取实际内容高度，判断是否需要展开按钮
-      const query = uni.createSelectorQuery().in(this);
-      let needExpand = false;
-      query.select('.text-content').boundingClientRect(data => {
-        if (data && data.height > this.maxHeight) {
-          needExpand = true;
-        }
-      }).exec();
-      return needExpand;
+      const query = uni.createSelectorQuery().in(this)
+      let needExpand = false
+      query
+        .select('.text-content')
+        .boundingClientRect(data => {
+          if (data && data.height > this.maxHeight) {
+            needExpand = true
+          }
+        })
+        .exec()
+      return needExpand
     }
   },
-  created() {
-    
-  },
+  created() {},
   methods: {
     handlePlay() {
-      this.$emit('play', this.src);
+      this.$emit('play', this.src)
     },
     toggleExpand() {
-      this.isExpanded = !this.isExpanded;
+      this.isExpanded = !this.isExpanded
     }
   },
-  beforeDestroy() {
-    
-  }
+  beforeDestroy() {}
 }
 </script>
 
@@ -121,7 +125,7 @@ export default {
 
 .location {
   font-size: 28rpx;
-  color: #007AFF;
+  color: #007aff;
 }
 
 .author {
@@ -130,7 +134,7 @@ export default {
 }
 
 .play-btn {
-  background: #007AFF;
+  background: #007aff;
   color: #fff;
   font-size: 24rpx;
   padding: 10rpx 30rpx;
@@ -139,7 +143,7 @@ export default {
 }
 
 .play-btn.playing {
-  background: #FF3B30;  /* 播放中时的红色背景 */
+  background: #ff3b30; /* 播放中时的红色背景 */
 }
 
 .expand-btn {
@@ -148,7 +152,7 @@ export default {
 }
 
 .expand-text {
-  color: #007AFF;
+  color: #007aff;
   font-size: 26rpx;
 }
 </style> 

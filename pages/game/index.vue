@@ -163,13 +163,9 @@
           <text v-if="mode === 'timer'">总耗时：{{ formatTime(120 - remainingTime) }}</text>
         </view>
         <view class="game-over-buttons">
-          <button class="restart-btn" @tap="restartGame">重新开始</button>
-          <button class="share-btn" open-type="share">分享给好友</button>
-        </view>
-        <view class="timeline-wrapper">
-          <button class="timeline-btn" @tap="showShareTip">
-            <text>分享到朋友圈</text>
-          </button>
+          <button class="game-over-btn restart-btn" @tap="restartGame">重新开始</button>
+          <button class="game-over-btn share-btn" open-type="share">分享给好友</button>
+          <button class="game-over-btn timeline-btn" @tap="showShareTip">分享到朋友圈</button>
         </view>
       </view>
     </view>
@@ -290,7 +286,35 @@ export default {
     this.destroyAudioContext()
     this.stopTimer()
   },
+  // 将分享方法直接定义在组件导出对象的顶层
+  onShareAppMessage(res) {
+    const shareTitle =
+      this.mode === 'province'
+        ? `我在${this.province}方言挑战中获得了${this.totalScore}分！`
+        : `我在方言挑战中获得了${this.totalScore}分！`
 
+    return {
+      title: shareTitle,
+      path: `/pages/game/index?mode=${this.mode}${
+        this.province ? '&province=' + this.province : ''
+      }`, // 添加参数
+      imageUrl: this.mode === 'province' ? this.backgroundImage : '/static/logo.png'
+    }
+  },
+
+  // 分享到朋友圈
+  onShareTimeline() {
+    const shareTitle =
+      this.mode === 'province'
+        ? `我在${this.province}方言挑战中获得了${this.totalScore}分！`
+        : `我在方言挑战中获得了${this.totalScore}分！`
+
+    return {
+      title: shareTitle,
+      query: `mode=${this.mode}${this.province ? '&province=' + this.province : ''}`, // 修改为正确的参数格式
+      imageUrl: this.mode === 'province' ? this.backgroundImage : '/static/logo.png'
+    }
+  },
   methods: {
     // 新增方法统一初始化音频
     onRegionChange(e) {
@@ -772,34 +796,6 @@ export default {
       this.handleGameOver()
     },
 
-    // 分享给好友
-    onShareAppMessage() {
-      const shareTitle =
-        this.mode === 'province'
-          ? `我在${this.province}方言挑战中获得了${this.totalScore}分！`
-          : `我在方言挑战中获得了${this.totalScore}分！`
-
-      return {
-        title: shareTitle,
-        path: '/pages/game/index', // 分享后进入的页面
-        imageUrl: this.mode === 'province' ? this.backgroundImage : '/static/logo.png' // 分享的图片，建议尺寸 5:4
-      }
-    },
-
-    // 分享到朋友圈
-    onShareTimeline() {
-      const shareTitle =
-        this.mode === 'province'
-          ? `我在${this.province}方言挑战中获得了${this.totalScore}分！`
-          : `我在方言挑战中获得了${this.totalScore}分！`
-
-      return {
-        title: shareTitle,
-        query: '/pages/game/index', // 可以添加参数
-        imageUrl: this.mode === 'province' ? this.backgroundImage : '/static/logo.png'
-      }
-    },
-
     showShareTip() {
       uni.showModal({
         title: '分享到朋友圈',
@@ -1250,20 +1246,21 @@ export default {
 
 .game-over-buttons {
   display: flex;
-  gap: 20rpx;
+  justify-content: space-between;
+  gap: 10rpx;
   margin-top: 30rpx;
-  margin-bottom: 20rpx;
 }
 
-.restart-btn,
-.share-btn {
+.game-over-btn {
   flex: 1;
-  height: 80rpx;
-  line-height: 80rpx;
+  height: 70rpx;
+  line-height: 70rpx;
+  font-size: 24rpx;
   text-align: center;
-  border-radius: 40rpx;
-  font-size: 28rpx;
+  border-radius: 35rpx;
   color: white;
+  padding: 0;
+  white-space: nowrap;
 }
 
 .restart-btn {
@@ -1274,33 +1271,12 @@ export default {
   background: #2196f3;
 }
 
-.timeline-wrapper {
-  margin-top: 20rpx;
-  padding: 0 20rpx;
-}
-
 .timeline-btn {
-  width: 100%;
-  height: 80rpx;
-  line-height: 80rpx;
-  text-align: center;
-  border-radius: 40rpx;
-  font-size: 28rpx;
-  color: white;
   background: #ff9800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-.timeline-icon {
-  margin-right: 10rpx;
-  font-size: 32rpx;
-}
-
-.share-btn::after,
-.timeline-btn::after {
-  border: none;
+.timeline-wrapper {
+  display: none;
 }
 
 .result-buttons {
@@ -1331,7 +1307,11 @@ export default {
 }
 
 /* 按钮点击效果 */
-.result-btn:active {
+.game-over-btn:active {
   opacity: 0.8;
+}
+
+.game-over-btn::after {
+  border: none;
 }
 </style>
