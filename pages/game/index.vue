@@ -6,11 +6,13 @@
         <view v-if="showTimer" class="timer-display"> 剩余时间：{{ formatRemainingTime() }} </view>
         <!-- 播放控制区域 -->
         <view class="player-controls">
-          <!-- 播放按钮 -->
-          <view class="play-btn-wrapper">
-            <button @tap="togglePlay" class="play-btn">
-              {{ isPlaying ? '暂停' : '播放' }}
-            </button>
+          <!-- 播放按钮和提示图标容器 -->
+          <view class="play-section">
+            <view class="play-btn-wrapper">
+              <button @tap="togglePlay" class="play-btn">
+                {{ isPlaying ? '暂停' : '播放' }}
+              </button>
+            </view>
           </view>
 
           <!-- 进度控制区域 -->
@@ -86,6 +88,7 @@
           >
             {{ showAnswer ? '隐藏文本' : '查看文本' }}
           </button>
+          <button class="btn eye-btn" @tap="showGameTip">玩法</button>
         </view>
       </view>
 
@@ -128,7 +131,7 @@
     </view>
     <view class="center-pin">
       <image src="/static/logo.png" class="pin-img" />
-      <text class="pin-text">{{ selected.city || '请选择位置' }}</text>
+      <text class="pin-text">{{ selected.city || '拖动地图选择位置' }}</text>
     </view>
 
     <!-- 结果遮罩层 -->
@@ -803,6 +806,19 @@ export default {
         showCancel: false,
         confirmText: '我知道了'
       })
+    },
+
+    showGameTip() {
+      uni.showModal({
+        title: '游戏玩法',
+        content: `1. 听方言歌谣
+
+2. 猜测方言所在位置，拖动地图选中位置
+
+3. 点击提交，查看偏差距离，获得积分`,
+        showCancel: false,
+        confirmText: '我知道了'
+      })
     }
   }
 }
@@ -852,6 +868,12 @@ export default {
   padding: 0 20rpx;
 }
 
+.play-section {
+  flex-shrink: 0;
+  margin-right: 20rpx;
+  margin-top: 10rpx;
+}
+
 .play-btn-wrapper {
   flex-shrink: 0;
   margin-right: 20rpx;
@@ -864,6 +886,12 @@ export default {
   line-height: 60rpx;
   font-size: 28rpx;
   padding: 0 20rpx;
+}
+
+.tip-icon {
+  flex-shrink: 0;
+  margin-right: 20rpx;
+  margin-top: 10rpx;
 }
 
 .progress-container {
